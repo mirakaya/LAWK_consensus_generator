@@ -52,16 +52,26 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
         if list_last_values[count][len(list_last_values[count]) -1] == chosen:
             list_correctness[count].append(1)
             dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
-            refseq = get_ref_sequence(count_pos, len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
+            refseq = get_ref_sequence(count_pos,
+                                      len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
+            dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
 
-            dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
+
         else:
-            list_correctness[count].append(0)
             dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
-            refseq = get_ref_sequence(count_pos, len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
+            list_correctness[count].append(0)
+            refseq = get_ref_sequence(count_pos,
+                                      len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
             dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
+
+
+
+
+        #time.sleep(1)
 
         count += 1
+
+
 
 
 
@@ -91,9 +101,13 @@ def read_ref_sequence(virus):
 
 def get_ref_sequence(count, K):
 
+    if count > K:
+        return ref_seq[count - 1: count + K - 1]
+    else:
+        return ref_seq[0: K]
 
 
-    return ref_seq[count - 1: count + K - 1]
+
 
 
 
@@ -179,7 +193,13 @@ def generate_consensus (output, k):
 
 
 
-            seq = dict_content[key][count:count+dict_infos.get(str(count) + "_" + str(key)).K].upper().replace('-', 'N')
+
+            if count < dict_infos.get(str(count) + "_" + str(key)).K:
+                seq = dict_content[key][0:dict_infos.get(str(count) + "_" + str(key)).K].upper().replace(
+                    '-', 'N')
+
+            else:
+                seq = dict_content[key][count:count+dict_infos.get(str(count) + "_" + str(key)).K].upper().replace('-', 'N')
 
 
             #seq = dict_content[key][count - 1: count + dict_infos.get(str(count) + "_" + str(key)).K - 1].upper().replace('-', 'N')
@@ -190,6 +210,8 @@ def generate_consensus (output, k):
             #print(str(count) + "_" + str(key), dict_infos.get(str(count) + "_" + str(key)).sequence_reconstructed)
 
             #time.sleep(1)
+
+        print(dict_bases.values())
 
         try:
             max_val = max(dict_bases.values())
@@ -202,10 +224,10 @@ def generate_consensus (output, k):
         if len(max_keys) == 1:
             consensus.append(max_keys[0])
             update_correctness(max_keys[0], k, count)
-        if max_val == 0:
+        elif max_val == 0:
             consensus.append("N")
             update_correctness("N", k, count)
-        if len(max_keys) > 1:
+        elif len(max_keys) > 1:
             if "A" in max_keys:
                 consensus.append("A")
                 update_correctness("A", k, count)
@@ -241,7 +263,9 @@ def generate_consensus (output, k):
 
     file = open(output, "w")
 
-    consensus[:len(dict_content.get(0))]
+    consensus = consensus[:len(dict_content.get(0))]
+
+    print(consensus)
     #print("consensus length", len(consensus))
     file.write(">CoopPipe_consensus\n" + ''.join(consensus)  + "\n")
 
@@ -274,7 +298,7 @@ if __name__ == '__main__':
     parser.add_argument("-ds", help="Dataset", type=str)
     args = parser.parse_args()
 
-    write_dataset("id\tKey\tName tool\tK\tSeq. reconstructed\tCorrectness expected\tRef. sequence\tActual correctness\n", True)
+    write_dataset("id\tKey\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
 
     filename = args.i
     dataset = args.ds
