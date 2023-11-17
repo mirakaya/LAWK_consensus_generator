@@ -4,7 +4,7 @@ import time
 
 class Formater():
     def __init__(self, id=-1, name_tool="", K=-1, sequence_reconstructed=[],
-                 correctness_expected=-1, ref_sequence=[], actual_correctness=-1, key=-1, virus=""):
+                 correctness_expected=-1, ref_sequence=[], actual_correctness=-1, key=-1, virus="", performance_list = []):
 
 
         self.id = id
@@ -16,6 +16,7 @@ class Formater():
         self.actual_correctness = actual_correctness
         self.key = key
         self.virus = virus
+        self.performance_list = performance_list
 
         self.access = 0
 
@@ -66,7 +67,7 @@ class Formater():
             count += 1
 
         try:
-            self.actual_correctness = correct_guesses / self.K
+            self.actual_correctness = correct_guesses / len(self.ref_sequence)
         except:
             self.actual_correctness = -1
 
@@ -77,6 +78,9 @@ class Formater():
     def add_virus(self, virus):
         self.virus = virus
 
+    def add_performance_list(self, performance_list):
+        self.performance_list = performance_list
+
     def write_to_file(self):
 
         cases = 3
@@ -86,8 +90,10 @@ class Formater():
             #file.write(str(self.id) + "\t" + str(self.key) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str(self.K) + "\t" + str("".join(self.sequence_reconstructed)) +
             #           "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) + "\t" + str(round(self.actual_correctness, cases)) + "\n")
 
+            self.performance_list = [str(x) for x in self.performance_list]
             if len(self.ref_sequence) != 0 or len(self.sequence_reconstructed) != 0:
                 file.write(
                     str(self.id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str("".join(self.sequence_reconstructed)) +
-                        "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) +
+                        "\t" + str(round(self.correctness_expected, cases)) + "\t" +
+                    str("".join(self.performance_list)) + "\t" + str("".join(self.ref_sequence)) +
                         "\t" + str(round(self.actual_correctness, cases)) + "\n")

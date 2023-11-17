@@ -5,13 +5,7 @@ import time
 
 from write_format import *
 
-dict_content = {}
-list_correctness=[]
-list_last_values=[]
 
-
-name_tools = []
-dict_infos = {}
 
 def add_to_dict(key, val, dict): #adds element to a dictionary with a certain val; creates element if it doesn't exist
 
@@ -30,13 +24,28 @@ def read_file (path): #read file and add it to a dictionary
     file = open(path, "r")
     count = -1
 
+    name_tool = ""
+
+    last_line_header = False
+
     for line in file:
 
         if line[0] != ">":
+            if last_line_header == True:
+                count += 1
+                name_tools.append(name_tool)
+                last_line_header = False
+
+            #print(count)
             add_to_dict(count, line.strip("\n"), dict_content)
-        else:
-            name_tools.append(line.split("[")[1].split("]")[0])
-            count += 1
+        else: #is header
+
+            if last_line_header == False:
+                name_tool = line.split("[")[1].split("]")[0]
+                last_line_header = True
+
+
+
 
 
     file.close()
@@ -46,24 +55,27 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
     count = 0
 
     for i in list_correctness:
+
         if len(list_correctness[count]) == k:
             list_correctness[count].pop(0)
 
-        if list_last_values[count][len(list_last_values[count]) -1] == chosen:
+        if list_last_values[count][len(list_last_values[count]) -1] == chosen and chosen != "N":
             list_correctness[count].append(1)
-            dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
-            refseq = get_ref_sequence(count_pos,
-                                      len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
-            dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
-
 
         else:
-            dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
             list_correctness[count].append(0)
-            refseq = get_ref_sequence(count_pos,
-                                      len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
-            dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
 
+
+
+        dict_infos.get(str(count_pos) + "_" + str(count)).add_performance_list(list_correctness[count])
+        # print("new-", str(count_pos) + "_" + str(count), dict_infos.get(str(count_pos) + "_" + str(count)).performance_list)
+        dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
+
+        refseq = get_ref_sequence(count_pos,
+                                  len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
+        dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
+
+        dict_infos.get(str(count_pos) + "_" + str(count)).write_to_file()
 
 
 
@@ -88,9 +100,15 @@ def read_ref_sequence(virus, path):
 
         if not line.startswith('>'):
 
+            line.split("\n")[0]
+
             reference_sequence += list(line)
+
         else:
             pass
+
+    reference_sequence = [i for i in reference_sequence if i != "\n"]
+
 
 
     file.close()
@@ -124,6 +142,7 @@ def generate_consensus (output, k):
 
 
         dict_bases = {}
+
 
         for key in dict_content:
 
@@ -200,7 +219,7 @@ def generate_consensus (output, k):
                     '-', 'N')
 
             else:
-                seq = dict_content[key][count:count+dict_infos.get(str(count) + "_" + str(key)).K].upper().replace('-', 'N')
+                seq = dict_content[key][count - dict_infos.get(str(count) + "_" + str(key)).K +1:count +1].upper().replace('-', 'N')
 
 
             #seq = dict_content[key][count - 1: count + dict_infos.get(str(count) + "_" + str(key)).K - 1].upper().replace('-', 'N')
@@ -224,6 +243,7 @@ def generate_consensus (output, k):
 
         if len(max_keys) == 1:
             consensus.append(max_keys[0])
+            #print("Max keys - ", max_keys[0])
             update_correctness(max_keys[0], k, count)
         elif max_val == 0:
             consensus.append("N")
@@ -272,10 +292,6 @@ def generate_consensus (output, k):
 
     file.close()
 
-    for elem in dict_infos:
-
-
-        dict_infos[elem].write_to_file()
 
 def write_dataset (content, header):
 
@@ -300,7 +316,7 @@ if __name__ == '__main__':
     #args = parser.parse_args()
 
     #write_dataset("id\tKey\tVirus\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
-    write_dataset("id\tVirus\tName_tool\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
+    write_dataset("id\tVirus\tName_tool\tSeq_reconstructed\tCorrectness_expected\tPerformance_list\tRef_sequence\tActual_correctness\n", True)
 
 
     #regular functioning
@@ -320,16 +336,28 @@ if __name__ == '__main__':
 
         for ref in os.listdir("References/" + ds + "_refs"):
 
+            dict_content = {}
+            list_correctness = []
+            list_last_values = []
+
+            name_tools = []
+            dict_infos = {}
+
+
+
             virus = ref.split(".")[0]
 
-
-            filename = "Dataset/" + ds + "/consensus/multifasta-" + virus + ".fa"
+            print("starting ", ds, virus)
+            filename = "Dataset/" + ds + "/consensus/" + virus + "-combined.fa"
             dataset = ds
             read_file(filename)
             ref_seq = read_ref_sequence(virus, "References/" + ds + "_refs/" + virus + ".fa")
+            #print(len(ref_seq))
+
             count = 0
             for i in k_vals:
-                generate_consensus("tmp-" + virus + "-" + str(i) + ".fa", i)
+                print(i)
+                generate_consensus("tmp-" + ds + "_" + virus + "-" + str(i) + ".fa", i)
                 count += 1
 
     #os.system("cat tmp-" + args.v + "-*.fa > new.fa")
