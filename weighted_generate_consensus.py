@@ -75,8 +75,8 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
 
 
 
-def read_ref_sequence(virus):
-    path = "References/" + args.ds + "_refs/" + args.v + ".fa"
+def read_ref_sequence(virus, path):
+    #path = "References/" + args.ds + "_refs/" + args.v + ".fa"
     file = open(path, "r")
 
 
@@ -133,6 +133,7 @@ def generate_consensus (output, k):
             dict_infos[str(count) + "_" + str(key)] = info
 
             dict_infos.get(str(count) + "_" + str(key)).add_key(key)
+            dict_infos.get(str(count) + "_" + str(key)).add_virus(virus)
             dict_infos.get(str(count) + "_" + str(key)).add_name_tool(name_tools[key])
 
             try:
@@ -211,7 +212,7 @@ def generate_consensus (output, k):
 
             #time.sleep(1)
 
-        print(dict_bases.values())
+        #print(dict_bases.values())
 
         try:
             max_val = max(dict_bases.values())
@@ -265,7 +266,7 @@ def generate_consensus (output, k):
 
     consensus = consensus[:len(dict_content.get(0))]
 
-    print(consensus)
+    #print(consensus)
     #print("consensus length", len(consensus))
     file.write(">CoopPipe_consensus\n" + ''.join(consensus)  + "\n")
 
@@ -292,26 +293,44 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Index",
     usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k>")
 
-    parser.add_argument("-i", help="Aligned multi-FASTA", type=str, required=True)
-    parser.add_argument("-v", help="Name of the virus.", type=str, required=True)
-    parser.add_argument("-k", help="Values of k, separated by spaces", nargs="+", type=int, required=True)
-    parser.add_argument("-ds", help="Dataset", type=str)
-    args = parser.parse_args()
+    #parser.add_argument("-i", help="Aligned multi-FASTA", type=str, required=True)
+    #parser.add_argument("-v", help="Name of the virus.", type=str, required=True)
+    #parser.add_argument("-k", help="Values of k, separated by spaces", nargs="+", type=int, required=True)
+    #parser.add_argument("-ds", help="Dataset", type=str)
+    #args = parser.parse_args()
 
-    write_dataset("id\tKey\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
-
-    filename = args.i
-    dataset = args.ds
-    read_file(filename)
-    ref_seq = read_ref_sequence(args.v)
+    #write_dataset("id\tKey\tVirus\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
+    write_dataset("id\tVirus\tName_tool\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
 
 
+    #regular functioning
+    #filename = args.i
+    #dataset = args.ds
+    #read_file(filename)
+    #ref_seq = read_ref_sequence(args.v)
+    #count = 0
+    #for i in args.k:
+    #    generate_consensus("tmp-" + args.v + "-" + str(i) + ".fa", i)
+    #    count += 1
+
+    datasets = ["DS18", "DS24"]
+    k_vals = [4, 10]
+
+    for ds in datasets:
+
+        for ref in os.listdir("References/" + ds + "_refs"):
+
+            virus = ref.split(".")[0]
 
 
-    count = 0
-    for i in args.k:
-        generate_consensus("tmp-" + args.v + "-" + str(i) + ".fa", i)
-        count += 1
+            filename = "Dataset/" + ds + "/consensus/multifasta-" + virus + ".fa"
+            dataset = ds
+            read_file(filename)
+            ref_seq = read_ref_sequence(virus, "References/" + ds + "_refs/" + virus + ".fa")
+            count = 0
+            for i in k_vals:
+                generate_consensus("tmp-" + virus + "-" + str(i) + ".fa", i)
+                count += 1
 
     #os.system("cat tmp-" + args.v + "-*.fa > new.fa")
     #os.system('rm tmp-*.fa')

@@ -4,7 +4,7 @@ import time
 
 class Formater():
     def __init__(self, id=-1, name_tool="", K=-1, sequence_reconstructed=[],
-                 correctness_expected=-1, ref_sequence=[], actual_correctness=-1, key=-1):
+                 correctness_expected=-1, ref_sequence=[], actual_correctness=-1, key=-1, virus=""):
 
 
         self.id = id
@@ -15,6 +15,7 @@ class Formater():
         self.ref_sequence = ref_sequence
         self.actual_correctness = actual_correctness
         self.key = key
+        self.virus = virus
 
         self.access = 0
 
@@ -73,11 +74,20 @@ class Formater():
     def add_key(self, key):
         self.key = key
 
+    def add_virus(self, virus):
+        self.virus = virus
+
     def write_to_file(self):
 
         cases = 3
 
         with open('stats.tsv', 'a') as file:
             #print(self.id, self.sequence_reconstructed)
-            file.write(str(self.id) + "\t" + str(self.key) + "\t" + str(self.name_tool) + "\t" + str(self.K) + "\t" + str("".join(self.sequence_reconstructed)) +
-                       "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) + "\t" + str(round(self.actual_correctness, cases)) + "\n")
+            #file.write(str(self.id) + "\t" + str(self.key) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str(self.K) + "\t" + str("".join(self.sequence_reconstructed)) +
+            #           "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) + "\t" + str(round(self.actual_correctness, cases)) + "\n")
+
+            if len(self.ref_sequence) != 0 or len(self.sequence_reconstructed) != 0:
+                file.write(
+                    str(self.id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str("".join(self.sequence_reconstructed)) +
+                        "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) +
+                        "\t" + str(round(self.actual_correctness, cases)) + "\n")

@@ -42,12 +42,16 @@ def get_columns_with_nan_values(data):
 	#get number of rows with missing values
 	print(data.shape[0] - data.dropna().shape[0])
 
+	print(data[data.isnull().any(axis=1)])
+
 	#small number, delete rows
 	data = data.dropna()
 
 	return data
 
 def transform_categorical_to_code(data):
+	data.Virus = pd.Categorical(data.Virus)
+	data["Virus"] = data.Virus.cat.codes
 
 	data.Seq_reconstructed = pd.Categorical(data.Seq_reconstructed)
 	data["Seq_reconstructed"] = data.Seq_reconstructed.cat.codes
@@ -422,11 +426,13 @@ def generate_plots(data):
 
 
 if __name__ == '__main__':
-	np.set_printoptions(threshold=np.inf)
+
 	data = import_files()
 	#print_info(data)
 	data = get_columns_with_nan_values(data)
 	data = transform_categorical_to_code(data)
+
+	print(data.shape)
 
 	print(data.dtypes)
 	X, Y = drop_columns(data)
