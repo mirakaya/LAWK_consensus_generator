@@ -23,9 +23,9 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBRegressor
 
 
-def import_files(): # import the csv file
+def import_files(filename): # import the csv file
 
-	return read_csv("stats.tsv", sep="\t")
+	return read_csv(filename, sep="\t")
 
 def print_info(data): #prints data information
 
@@ -252,10 +252,7 @@ def generate_predictions(model, X_test, name_file, ids_test):
 
 def generate_submission_file(ids_test, prediction, name_file):
 
-
-
-
-	df = pd.DataFrame(prediction, columns=['predicted_label'], index=ids_test)
+	df = pd.DataFrame(prediction, columns=['Actual_correctness'], index=ids_test)
 	df.index.name = 'ID'
 	df.to_csv(name_file, index=ids_test)
 
@@ -427,7 +424,7 @@ def generate_plots(data):
 
 if __name__ == '__main__':
 
-	data = import_files()
+	data = import_files("stats.tsv")
 	#print_info(data)
 	data = get_columns_with_nan_values(data)
 	data = transform_categorical_to_code(data)
@@ -437,11 +434,13 @@ if __name__ == '__main__':
 	print(data.dtypes)
 	X, Y = drop_columns(data)
 
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
 	#xgb_model = XGBRegressor()
 
-	xgb_model = KNeighborsRegressor(n_neighbors=3)
+	xgb_model = KNeighborsRegressor(n_neighbors=7)
 	xgb_model.fit(X_train, y_train)
 	print(f"Accuracy of the xgb_model: {xgb_model.score(X_test, y_test) * 100} %")
+
+	generate_submission_file()
 

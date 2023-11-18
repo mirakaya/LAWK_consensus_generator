@@ -5,8 +5,6 @@ import time
 
 from write_format import *
 
-
-
 def add_to_dict(key, val, dict): #adds element to a dictionary with a certain val; creates element if it doesn't exist
 
     if key in dict:
@@ -75,7 +73,11 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
                                   len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
         dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
 
-        dict_infos.get(str(count_pos) + "_" + str(count)).write_to_file()
+        ans = dict_infos.get(str(count_pos) + "_" + str(count)).write_to_file(id_number[0])
+        if ans == True:
+            id_number[0] = id_number[0] + 1
+
+
 
 
 
@@ -304,7 +306,11 @@ def write_dataset (content, header):
 
 
 
+
+
 if __name__ == '__main__':
+
+
 
     parser = argparse.ArgumentParser(description="Index",
     usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k>")
@@ -316,7 +322,7 @@ if __name__ == '__main__':
     #args = parser.parse_args()
 
     #write_dataset("id\tKey\tVirus\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
-    write_dataset("id\tVirus\tName_tool\tSeq_reconstructed\tCorrectness_expected\tPerformance_list\tRef_sequence\tActual_correctness\n", True)
+    write_dataset("id\tInternal_id\tVirus\tName_tool\tSeq_reconstructed\tCorrectness_expected\tPerformance_list\tRef_sequence\tActual_correctness\n", True)
 
 
     #regular functioning
@@ -332,6 +338,8 @@ if __name__ == '__main__':
     datasets = ["DS18", "DS24"]
     k_vals = [4, 10]
 
+    id_number = [1]
+
     for ds in datasets:
 
         for ref in os.listdir("References/" + ds + "_refs"):
@@ -343,9 +351,9 @@ if __name__ == '__main__':
             name_tools = []
             dict_infos = {}
 
-
-
             virus = ref.split(".")[0]
+
+
 
             print("starting ", ds, virus)
             filename = "Dataset/" + ds + "/consensus/" + virus + "-combined.fa"

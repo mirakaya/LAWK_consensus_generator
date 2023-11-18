@@ -2,7 +2,9 @@ import struct
 import time
 
 
+
 class Formater():
+
     def __init__(self, id=-1, name_tool="", K=-1, sequence_reconstructed=[],
                  correctness_expected=-1, ref_sequence=[], actual_correctness=-1, key=-1, virus="", performance_list = []):
 
@@ -81,7 +83,7 @@ class Formater():
     def add_performance_list(self, performance_list):
         self.performance_list = performance_list
 
-    def write_to_file(self):
+    def write_to_file(self, overall_id):
 
         cases = 3
 
@@ -91,9 +93,19 @@ class Formater():
             #           "\t" + str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.ref_sequence)) + "\t" + str(round(self.actual_correctness, cases)) + "\n")
 
             self.performance_list = [str(x) for x in self.performance_list]
+
+            if self.ref_sequence == []:
+                tmp_seq = ""
+                for i in self.sequence_reconstructed:
+                    tmp_seq += "N"
+                self.ref_sequence = tmp_seq
+
             if len(self.ref_sequence) != 0 or len(self.sequence_reconstructed) != 0:
                 file.write(
-                    str(self.id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str("".join(self.sequence_reconstructed)) +
+                    str(overall_id) + "\t" + str(self.id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" + str("".join(self.sequence_reconstructed)) +
                         "\t" + str(round(self.correctness_expected, cases)) + "\t" +
                     str("".join(self.performance_list)) + "\t" + str("".join(self.ref_sequence)) +
                         "\t" + str(round(self.actual_correctness, cases)) + "\n")
+                return True
+            else:
+                return False
