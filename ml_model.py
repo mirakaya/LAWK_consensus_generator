@@ -12,12 +12,13 @@ from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, accuracy_score, mean_squared_error, r2_score, \
+	mean_absolute_percentage_error
 from sklearn.model_selection import train_test_split, GridSearchCV
 import random as rd
 import xgboost as xgb
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBRegressor
@@ -25,7 +26,7 @@ from xgboost import XGBRegressor
 
 def import_files(filename): # import the csv file
 
-	return read_csv(filename, sep="\t")
+	return read_csv(filename, sep="\t", low_memory=False)
 
 def print_info(data): #prints data information
 
@@ -75,10 +76,10 @@ def correlation(data):
 	plt.show()
 
 	# Correlation with output variable
-	cor_target = abs(cor["fraud_bool"])
-	list_columns_dropped = remove_low_correlation(data, cor_target)
+	cor_target = abs(cor["Actual_correctness"])
+	#list_columns_dropped = remove_low_correlation(data, cor_target)
 
-	return list_columns_dropped
+	#return list_columns_dropped
 
 def remove_low_correlation(data, cor_target):
 
@@ -110,6 +111,7 @@ def drop_columns(data):
 
 	dfaux = data.drop("Actual_correctness", axis=1, inplace=False)
 	dfaux = dfaux.drop("id", axis=1, inplace=False)
+	dfaux = dfaux.drop("Internal_id", axis=1, inplace=False)
 
 	try:
 		feature_cols = dfaux.columns
@@ -426,8 +428,9 @@ if __name__ == '__main__':
 
 	data = import_files("stats.tsv")
 	#print_info(data)
-	data = get_columns_with_nan_values(data)
+	#data = get_columns_with_nan_values(data)
 	data = transform_categorical_to_code(data)
+	#correlation(data)
 
 	print(data.shape)
 
@@ -436,11 +439,38 @@ if __name__ == '__main__':
 
 	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-	#xgb_model = XGBRegressor()
+	#data.plot(kind='scatter', x='Actual_correctness', y='Correctness_expected', color="red")
+	#plt.show()
 
-	xgb_model = KNeighborsRegressor(n_neighbors=7)
-	xgb_model.fit(X_train, y_train)
-	print(f"Accuracy of the xgb_model: {xgb_model.score(X_test, y_test) * 100} %")
+	model = XGBRegressor(random_state=42)
+	#model = KNeighborsRegressor(n_neighbors=7)
 
-	generate_submission_file()
+	# Initialize the MLP model
+	#model = MLPRegressor(hidden_layer_sizes=(5,), activation='relu', solver='adam', alpha=0.01)
+
+	model.fit(X_train, y_train)
+	# Evaluate the model on the testing data
+	y_pred = model.predict(X_test)
+
+
+
+	print(y_pred)
+
+	#data.plot(kind='scatter', x=X_test['Correctness_expected'], y=y_pred, color="blue")
+	#plt.show()
+
+
+
+	# Evaluate the model's performance
+	mse = mean_squared_error(y_test, y_pred)
+	r2 = r2_score(y_test, y_pred)
+	mae = mean_absolute_error(y_test, y_pred)
+	mape = mean_absolute_percentage_error(y_test, y_pred)
+	print(f"Mean squared error: {mse:.2f}")
+	print(f"R-squared: {r2:.2f}")
+	print(f"Mean absolute error: {mae:.2f}")
+	print(f"Mean absolute percentage error: {mape:.2f}")
+
+
+
 
