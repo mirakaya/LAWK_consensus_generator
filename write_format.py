@@ -141,14 +141,14 @@ class Formater():
 
             if len(self.ref_sequence) != 0 or len(self.sequence_reconstructed) != 0:
                 file.write(
-                    str(overall_id) + "\t" + str(self.id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" +
+                    str(overall_id) + "\t" + self.virus + "\t" + str(self.name_tool) + "\t" +
                         str(self.K) + "\t" + str("".join(self.sequence_reconstructed)) +
                         "\t" + str(self.number_a_expected) + "\t" + str(self.number_t_expected) + "\t" + str(self.number_c_expected) + "\t" + str(self.number_g_expected) +
-                        "\t" + str(self.number_u_expected) + "\t" + str(self.number_n_expected) + "\t" +
+                        "\t" + str(self.number_n_expected) + "\t" +
                         str(round(self.correctness_expected, cases)) + "\t" + str("".join(self.performance_list)) + "\t" +
                         str("".join(self.ref_sequence)) + "\t" +
                         str(self.number_a_ref) + "\t" + str(self.number_t_ref) + "\t" + str(self.number_c_ref) + "\t" + str(self.number_g_ref) +
-                        "\t" + str(self.number_u_ref) + "\t" + str(self.number_n_ref) + "\t" +
+                        "\t" + str(self.number_n_ref) + "\t" +
                         str(round(self.actual_correctness, cases)) + "\n")
 
                 return True

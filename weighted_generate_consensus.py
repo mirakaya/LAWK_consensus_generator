@@ -57,7 +57,7 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
         if len(list_correctness[count]) == k:
             list_correctness[count].pop(0)
 
-        if list_last_values[count][len(list_last_values[count]) -1] == chosen and chosen != "N":
+        if list_last_values[count][len(list_last_values[count]) -1] == chosen : #and chosen != "N":
             list_correctness[count].append(1)
 
         else:
@@ -322,7 +322,7 @@ if __name__ == '__main__':
     #args = parser.parse_args()
 
     #write_dataset("id\tKey\tVirus\tName_tool\tK\tSeq_reconstructed\tCorrectness_expected\tRef_sequence\tActual_correctness\n", True)
-    write_dataset("id\tInternal_id\tVirus\tName_tool\tK\tSeq_reconstructed\tNr_A_expected\tNr_T_expected\tNr_C_expected\tNr_G_expected\tNr_U_expected\tNr_N_expected\tCorrectness_expected\tPerformance_list\tRef_sequence\tNr_A_ref\tNr_T_ref\tNr_C_ref\tNr_G_ref\tNr_U_ref\tNr_N_ref\tActual_correctness\n", True)
+    write_dataset("id\tVirus\tName_tool\tK\tSeq_reconstructed\tNr_A_expected\tNr_T_expected\tNr_C_expected\tNr_G_expected\tNr_N_expected\tCorrectness_expected\tPerformance_list\tRef_sequence\tNr_A_ref\tNr_T_ref\tNr_C_ref\tNr_G_ref\tNr_N_ref\tActual_correctness\n", True)
 
 
     #regular functioning
@@ -340,7 +340,7 @@ if __name__ == '__main__':
                 "DS27",  "DS28",  "DS29",  "DS30",  "DS31",  "DS32",  "DS33",  "DS34",  "DS35",  "DS36",  "DS37",  "DS38",
                 "DS39",  "DS40",  "DS41",  "DS42",  "DS43",  "DS44",  "DS45",  "DS46",  "DS47",  "DS48",  "DS49",  "DS50",
                 "DS51",  "DS52",  "DS53",  "DS54",  "DS55",  "DS56",  "DS57",  "DS58",  "DS59",  "DS60",  "DS61",  "DS62"]
-    k_vals = [5, 15, 30, 100] #, 200, 400, 500]
+    k_vals = [5, 15, 30, 50] #, 200, 400, 500]
 
     id_number = [1]
 
