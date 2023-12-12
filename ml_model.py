@@ -1,3 +1,4 @@
+import time
 import warnings
 
 import numpy as np
@@ -26,12 +27,13 @@ from xgboost import XGBRegressor
 
 def import_files(filename): # import the csv file
 
-	chunk_list = []
+	'''chunk_list = []
 
-	for chunk in pd.read_csv(filename, sep='\t', chunksize=200000, low_memory=False):
+	for chunk in pd.read_csv(filename, sep='\t', low_memory=False):
 		chunk_list.append(chunk)
 
-	return pd.concat(chunk_list, axis=0)
+	return pd.concat(chunk_list, axis=0)'''
+	return pd.read_csv(filename, sep='\t')
 
 def print_info(data): #prints data information
 
@@ -207,8 +209,9 @@ if __name__ == '__main__':
 	f_tsv.close()
 
 
-
-	data = import_files("stats_sample.tsv")
+	init_time = time.perf_counter()
+	data = import_files("stats.tsv")
+	print("TIME ->", time.perf_counter() - init_time)
 	print(data.shape)
 	print(data.dtypes)
 
@@ -217,7 +220,7 @@ if __name__ == '__main__':
 
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.5, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
 	cross_validation_MLPRegressor(X_train, y_train, y_test)
 
