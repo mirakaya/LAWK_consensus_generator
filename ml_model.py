@@ -26,7 +26,12 @@ from xgboost import XGBRegressor
 
 def import_files(filename): # import the csv file
 
-	return read_csv(filename, sep="\t", low_memory=False)
+	chunk_list = []
+
+	for chunk in pd.read_csv(filename, sep='\t', chunksize=200000, low_memory=False):
+		chunk_list.append(chunk)
+
+	return pd.concat(chunk_list, axis=0)
 
 def print_info(data): #prints data information
 
@@ -105,16 +110,10 @@ def remove_low_correlation(data, cor_target):
 
 def drop_columns(data):
 
-	#imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
-	#imputer.fit(data)
-	#dfaux = imputer.transform(data)
-
-	dfaux = data.drop("Actual_correctness", axis=1, inplace=False)
-	dfaux = dfaux.drop("id", axis=1, inplace=False)
-	dfaux = dfaux.drop("Internal_id", axis=1, inplace=False)
+	data = data.drop("id", axis=1, inplace=False)
 
 	try:
-		feature_cols = dfaux.columns
+		feature_cols = data.columns
 	except:
 		pass
 
@@ -124,298 +123,68 @@ def drop_columns(data):
 	return X, Y
 
 
-def fit_data_normal (model, X_train,y_train):
-	# fit the model with data
-	model.fit(X_train, y_train)
-	name_file = "submission_data_normal.csv"
-	generate_predictions(model, X_test, name_file)
-	return model
+def print_to_files(info):
 
-def xgboost(X_train, y_train):
+	f_tex = open("performance_model.tex", "a")
+	f_tsv = open("performance_model.tsv", "a")
 
-	model = xgb.XGBClassifier(objective="binary:logistic", random_state=42)
+	for elem in info:
+		i = str(elem)
+		f_tex.write(i + " & ")
+		f_tsv.write(i + "\t")
+	f_tex.write("\\\\\\hline\n")
+	f_tsv.write("\n")
 
-	#grid_clf = GridSearchCV(model, param_grid, cv=2)
-	model.fit(X_train, y_train)
+	f_tex.close()
+	f_tsv.close()
 
-	name_file = "submission_xgboost.csv"
-	generate_predictions(model, X_test, y_test, name_file)
 
-	return model
+def cross_validation_MLPRegressor(X_train, y_train, y_test):
+	param_activation = ['tanh', 'relu']
+	param_solver = ['sgd', 'adam']
+	param_alpha= [0.0001, 0.001, 0.01, 0.1]
+	param_learning_rate = ['constant', 'adaptive']
+	param_hidden_layer_sizes = [(50, 50, 50), (50, 100, 50), (100,), (5, 5, 5), (50, 50), (5, 5), (2, 5, 2)]
 
-def cross_validation_rand_forest(X_train, y_train):
-	#param_grid = {
-	#	'n_estimators': [5, 10, 15, 20, 30], #, 40, 50, 75, 100, 150, 200, 300, 500, 1000],
-	#	'max_depth': [2, 5, 7, 9, 11, 17, None],
-	#	'criterion': ['entropy'] #, 'gini'],
-	#}
+	for activation in param_activation:
 
-	param_grid = {
-		'bootstrap': [True],
-		'max_depth': [80, 90, 100, 110],
-		'max_features': [2, 3],
-		'min_samples_leaf': [3, 4, 5],
-		'min_samples_split': [8, 10, 12],
-		'n_estimators': [30, 100, 200, 300, 1000]
-	}
+		for solver in param_solver:
 
-	model = RandomForestClassifier()
+			for alpha in param_alpha:
 
-	grid_clf = GridSearchCV(model, param_grid, cv=2)
-	grid_clf.fit(X_train, y_train)
-	print(grid_clf.best_estimator_)
-	print(grid_clf.best_score_)
-	print(grid_clf.best_params_)
+				for learning_rate in param_learning_rate:
 
-	name_file = "submission_cv.csv"
-	generate_predictions(grid_clf, X_test, y_test, name_file)
+					for hidden_layer_sizes in param_hidden_layer_sizes:
 
-	return grid_clf
+						model = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, activation=activation, solver=solver, alpha=alpha, learning_rate=learning_rate, random_state=42)
 
-def random_forest(X_train, y_train):
+						model.fit(X_train, y_train)
+						y_pred = model.predict(X_test)
 
-	# model
-	#randFor = RandomForestClassifier(criterion='entropy',n_estimators = 10, max_depth = None, random_state=seed)  #criterion entropy and gini produce very similar results
-	randFor = RandomForestClassifier(criterion='entropy', max_depth=2, max_features=None, n_estimators=30)
-	randFor.fit(X_train, y_train)
+						# Evaluate the model's performance
+						mse = mean_squared_error(y_test, y_pred)
+						r2 = r2_score(y_test, y_pred)
+						mae = mean_absolute_error(y_test, y_pred)
+						mape = mean_absolute_percentage_error(y_test, y_pred)
+						print(hidden_layer_sizes, activation, solver, alpha, learning_rate)
+						print(f"Mean squared error: {mse:.2f}")
+						print(f"R-squared: {r2:.2f}")
+						print(f"Mean absolute error: {mae:.2f}")
+						print(f"Mean absolute percentage error: {mape:.2f}")
 
-	#cross_validation_rand_forest(X_train, y_train)
+						#TODO - implement these metrics
+						ncsd = 1
+						nrc = 1
+						identity = 0
+						model_score = 0
 
+						info = [hidden_layer_sizes, activation, solver, alpha, learning_rate, mse, r2, mae, mape, ncsd, nrc, identity]
 
-	return randFor
+						print_to_files(info)
 
-def ensemble(X_train, y_train):
 
-	#checked for parameters
-	#{'activation': 'relu', 'alpha': 0.01, 'batch_size': 'auto', 'beta_1': 0.9, 'beta_2': 0.999,
-	# 'early_stopping': False, 'epsilon': 1e-08, 'hidden_layer_sizes': (5, 200, 1000), 'learning_rate': 'adaptive',
-	# 'learning_rate_init': 0.001, 'max_fun': 15000, 'max_iter': 500, 'momentum': 0.9, 'n_iter_no_change': 10,
-	# 'nesterovs_momentum': True, 'power_t': 0.5, 'random_state': None, 'shuffle': True, 'solver': 'adam', 'tol': 0.0001,
-	# 'validation_fraction': 0.1, 'verbose': False, 'warm_start': False}
 
 
-	xgb_model = xgb.XGBClassifier(booster='gbtree', max_depth=3, min_child_weight=0.5, subsample=1)
-	#xgb_model.fit(X_train, y_train)
-	# Evaluate the performance of the ensemble on the testing data
-	#print(f"Accuracy of the XGBClassifier: {xgb_model.score(X_test, y_test) * 100} %")
-
-	lr = LogisticRegression(C=0.001, penalty='l1', solver='liblinear', tol=1e-05)
-	#lr.fit(X_train, y_train)
-	# Evaluate the performance of the ensemble on the testing data
-	#print(f"Accuracy of the LogisticRegression: {lr.score(X_test, y_test) * 100} %")
-
-	randFor = RandomForestClassifier(bootstrap= True, max_depth=20, max_features=4, n_estimators=100, min_samples_leaf=3, min_samples_split=10)
-	#randFor.fit(X_train, y_train)
-	# Evaluate the performance of the ensemble on the testing data
-	#print(f"Accuracy of the RandomForestClassifier: {randFor.score(X_test, y_test) * 100} %")
-
-	dtc = DecisionTreeClassifier(criterion='gini', min_samples_leaf=1, min_samples_split=2, min_weight_fraction_leaf=0.1, splitter= "best")
-	#dtc.fit(X_train, y_train)
-	#print(f"Accuracy of the DecisionTreeClassifier: {dtc.score(X_test, y_test) * 100} %")
-
-
-#missing
-	gbc = GradientBoostingClassifier()
-	#gbc.fit(X_train, y_train)
-	#print(f"Accuracy of the GradientBoostingClassifier: {gbc.score(X_test, y_test) * 100} %")
-
-	knn = KNeighborsClassifier()
-	#knn.fit(X_train, y_train)
-	#print(f"Accuracy of the KNeighborsClassifier: {knn.score(X_test, y_test) * 100} %")
-
-	nn = MLPClassifier(solver="adam", alpha=0.01, hidden_layer_sizes=(5, 200, 1000), activation="relu", learning_rate="adaptive", max_iter=500)
-	#nn.fit(X_train, y_train)
-	# Evaluate the performance of the ensemble on the testing data
-	#print(f"Accuracy of the MLPClassifier: {nn.score(X_test, y_test) * 100} %")'''
-
-
-
-	# Combine the models using majority voting
-	ensemble = VotingClassifier(estimators=[('rf', randFor), ('xgb', xgb_model), ('lr', lr), ('nn',  nn), ('dtc', dtc), ('gbc', gbc), ('knn', knn) ], voting='hard')
-
-
-
-	# Fit the ensemble on the training data
-	ensemble.fit(X_train, y_train)
-
-	# Evaluate the performance of the ensemble on the testing data
-	print(f"Accuracy of the ensemble: {ensemble.score(X_test, y_test) * 100} %")
-
-	return ensemble
-
-def generate_predictions(model, X_test, name_file, ids_test):
-
-	prediction = model.predict(X_test)
-
-	generate_submission_file(ids_test, prediction, name_file)
-
-
-
-
-def generate_submission_file(ids_test, prediction, name_file):
-
-	df = pd.DataFrame(prediction, columns=['Actual_correctness'], index=ids_test)
-	df.index.name = 'ID'
-	df.to_csv(name_file, index=ids_test)
-
-def test_params_logistic_regression (X_train, y_train):
-	list_penalty = ["l1","l2", "none"]
-	list_solver = ["lbfgs", "liblinear", "newton-cg", "sag", "saga"]
-	list_tolerance = [0.0001, 0.001, 0.01, 0.1]
-	list_Cs = [0.0001, 0.001, 0.01, 0.1, 1]
-	model_chosen = LogisticRegression()
-	score = 0
-	warnings.filterwarnings("ignore")
-
-	for curr_penalty in list_penalty:
-
-		for curr_solver in list_solver:
-
-			for curr_tolerance in list_tolerance:
-
-				for curr_C in list_Cs:
-
-					try:
-						model1 = LogisticRegression(penalty=curr_penalty, dual=False, tol=curr_tolerance,
-						                            C=curr_C, solver=curr_solver, max_iter=10000,
-						                            multi_class='auto')
-
-						# Fit the ensemble on the training data
-						model1.fit(X_train, y_train)
-
-						accuracy = model1.score(X_test, y_test) * 100
-						# Evaluate the performance of the ensemble on the testing data
-						print(f"Accuracy of the ensemble: {accuracy} %")
-
-						if accuracy > score:
-							model_chosen = model1
-							score = accuracy
-							print(model_chosen.get_params())
-
-					except:
-						pass
-
-	print(model_chosen.get_params(), score)
-
-def test_params_xgboost (X_train, y_train):
-	list_penalty = ["l1","l2", "none"]
-	list_solver = ["lbfgs", "liblinear", "newton-cg", "sag", "saga"]
-	list_tolerance = [0.0001, 0.001, 0.01, 0.1]
-	list_Cs = [0.0001, 0.001, 0.01, 0.1, 1]
-	model_chosen = LogisticRegression()
-	score = 0
-	warnings.filterwarnings("ignore")
-
-	for curr_penalty in list_penalty:
-
-		for curr_solver in list_solver:
-
-			for curr_tolerance in list_tolerance:
-
-				for curr_C in list_Cs:
-
-					try:
-						model1 = LogisticRegression(penalty=curr_penalty, dual=False, tol=curr_tolerance,
-						                            C=curr_C, solver=curr_solver, max_iter=10000,
-						                            multi_class='auto')
-
-						# Fit the ensemble on the training data
-						model1.fit(X_train, y_train)
-
-						accuracy = model1.score(X_test, y_test) * 100
-						# Evaluate the performance of the ensemble on the testing data
-						print(f"Accuracy of the ensemble: {accuracy} %")
-
-						if accuracy > score:
-							model_chosen = model1
-							score = accuracy
-							print(model_chosen.get_params())
-
-					except:
-						pass
-
-	print(model_chosen.get_params(), score)
-
-def test_params_neural_network (X_train, y_train):
-
-	list_activation = ["identity", "logistic", "tanh", "relu"]
-	list_alpha = [0.0001, 0.001, 0.01, 0.1]
-	list_solver = ["lbfgs", "sgd", "adam"]
-	list_learning_rate = ["constant", "invscaling", "adaptive"]
-	list_max_iterations = [1, 10, 50, 100, 200, 500, 1000]
-
-	model_chosen = MLPClassifier()
-	score = 0
-	warnings.filterwarnings("ignore")
-
-	for activation in list_activation:
-
-		for alpha in list_alpha:
-
-			for solver in list_solver:
-
-				for learning_rate in list_learning_rate:
-
-					for max_it in list_max_iterations:
-
-						try:
-							model1 = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=(5, 2), random_state=random.randint(1, 10000), activation=activation, learning_rate=learning_rate, max_iter=max_it)
-
-							# Fit the ensemble on the training data
-							model1.fit(X_train, y_train)
-
-							accuracy = model1.score(X_test, y_test) * 100
-							# Evaluate the performance of the ensemble on the testing data
-							print(f"Accuracy of the ensemble: {accuracy} %")
-
-							if accuracy > score:
-								model_chosen = model1
-								score = accuracy
-								print(model_chosen.get_params())
-
-						except:
-							pass
-
-	print(model_chosen.get_params(), score)
-
-def test_params_neural_network_v2(X_train, y_train):
-
-	list_hidden_units = [1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
-
-	model_chosen = MLPClassifier()
-	score = 0
-
-	for nr_hidden_units in list_hidden_units:
-
-		#for snd_layer_units in list_hidden_units:
-
-		#	for trd_layer_units in list_hidden_units:
-
-
-		try:
-
-			model1 = MLPClassifier(solver="adam", alpha=0.01, hidden_layer_sizes=(nr_hidden_units, ),
-			                       activation="relu", learning_rate="adaptive", max_iter=500)
-
-			print(nr_hidden_units)
-			# Fit the ensemble on the training data
-			model1.fit(X_train, y_train)
-
-
-			accuracy = model1.score(X_test, y_test) * 100
-			print(accuracy)
-			# Evaluate the performance of the ensemble on the testing data
-			print(f"Accuracy of the ensemble: {accuracy} %")
-
-			if accuracy > score:
-				model_chosen = model1
-				score = accuracy
-				print(model_chosen.get_params())
-
-		except:
-			pass
-
-	print(model_chosen.get_params(),"\n" , score)
 
 
 
@@ -426,50 +195,57 @@ def generate_plots(data):
 
 if __name__ == '__main__':
 
-	data = import_files("stats.tsv")
-	#print_info(data)
-	#data = get_columns_with_nan_values(data)
+	filename = "performance_model.tex"
+	file_tsv = "performance_model.tsv"
+	if os.path.exists(filename):
+		os.remove(filename)
+	if os.path.exists(file_tsv):
+		os.remove(file_tsv)
+
+	f_tsv = open(file_tsv, "w")
+	f_tsv.write("hidden_layer_sizes\tactivation\tsolver\talpha\tlearning_rate\tmse\tr2\tmae\tmape\tncsd\tnrc\tidentity\n")
+	f_tsv.close()
+
+
+
+	data = import_files("stats_sample.tsv")
+	print(data.shape)
+	print(data.dtypes)
+
 	data = transform_categorical_to_code(data)
 	#correlation(data)
 
-	print(data.shape)
 
-	print(data.dtypes)
 	X, Y = drop_columns(data)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.5, random_state=42)
 
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+	cross_validation_MLPRegressor(X_train, y_train, y_test)
 
 	#data.plot(kind='scatter', x='Actual_correctness', y='Correctness_expected', color="red")
 	#plt.show()
 
-	model = XGBRegressor(random_state=42)
-	#model = KNeighborsRegressor(n_neighbors=7)
+	#model = XGBRegressor(random_state=42)
+	#model = KNeighborsRegressor(n_neighbors=5)
+	#model = MLPRegressor(activation='relu', solver='adam', alpha=0.01)
 
-	# Initialize the MLP model
-	#model = MLPRegressor(hidden_layer_sizes=(5,), activation='relu', solver='adam', alpha=0.01)
-
-	model.fit(X_train, y_train)
+	#model.fit(X_train, y_train)
 	# Evaluate the model on the testing data
-	y_pred = model.predict(X_test)
+'''	y_pred = model.predict(X_test)
 
 
 
-	print(y_pred)
-
-	#data.plot(kind='scatter', x=X_test['Correctness_expected'], y=y_pred, color="blue")
-	#plt.show()
-
+	print(y_pred)'''
 
 
 	# Evaluate the model's performance
-	mse = mean_squared_error(y_test, y_pred)
+'''	mse = mean_squared_error(y_test, y_pred)
 	r2 = r2_score(y_test, y_pred)
 	mae = mean_absolute_error(y_test, y_pred)
 	mape = mean_absolute_percentage_error(y_test, y_pred)
 	print(f"Mean squared error: {mse:.2f}")
 	print(f"R-squared: {r2:.2f}")
 	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")
+	print(f"Mean absolute percentage error: {mape:.2f}")'''
 
 
 
