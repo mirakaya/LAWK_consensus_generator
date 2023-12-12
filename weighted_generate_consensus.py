@@ -39,7 +39,10 @@ def read_file (path): #read file and add it to a dictionary
         else: #is header
 
             if last_line_header == False:
-                name_tool = line.split("[")[1].split("]")[0]
+                try:
+                    name_tool = line.split("[")[1].split("]")[0]
+                except:
+                    print(line.split("["))
                 last_line_header = True
 
 
@@ -335,16 +338,28 @@ if __name__ == '__main__':
     #    generate_consensus("tmp-" + args.v + "-" + str(i) + ".fa", i)
     #    count += 1
 
-    datasets = ["DS1", "DS2", "DS3", "DS4", "DS5", "DS6", "DS7", "DS8", "DS9", "DS10", "DS11", "DS12", "DS13", "DS14",
-                "DS15",  "DS16", "DS17",  "DS18",  "DS19",  "DS20",  "DS21",  "DS22",  "DS23",  "DS24",  "DS25",  "DS26",
-                "DS27",  "DS28",  "DS29",  "DS30",  "DS31",  "DS32",  "DS33",  "DS34",  "DS35",  "DS36",  "DS37",  "DS38",
-                "DS39",  "DS40",  "DS41",  "DS42",  "DS43",  "DS44",  "DS45",  "DS46",  "DS47",  "DS48",  "DS49",  "DS50",
-                "DS51",  "DS52",  "DS53",  "DS54",  "DS55",  "DS56",  "DS57",  "DS58",  "DS59",  "DS60",  "DS61",  "DS62"]
+    #datasets = ["DS1", "DS2", "DS3", "DS4", "DS5", "DS6", "DS7", "DS8", "DS9", "DS10", "DS11", "DS12", "DS13", "DS14",
+    #            "DS15",  "DS16", "DS17",  "DS18",  "DS19",  "DS20",  "DS21",  "DS22",  "DS23",  "DS24",  "DS25",  "DS26",
+    #            "DS27",  "DS28",  "DS29",  "DS30",  "DS31",  "DS32",  "DS33",  "DS34",  "DS35",  "DS36",  "DS37",  "DS38",
+    #            "DS39",  "DS40",  "DS41",  "DS42",  "DS43",  "DS44",  "DS45",  "DS46",  "DS47",  "DS48",  "DS49",  "DS50",
+    #            "DS51",  "DS52",  "DS53",  "DS54",  "DS55",  "DS56" ] # ,  "DS57",  "DS58",  "DS59",  "DS60",  "DS61",  "DS62"]
+
+    datasets = [ "DS9", "DS10", "DS11",
+                "DS17", "DS18", "DS19", "DS20", "DS21", "DS22", "DS23", "DS24",
+                "DS25", "DS26", "DS27", "DS28", "DS29", "DS30", "DS31", "DS32",
+                "DS33", "DS34", "DS35", "DS36", "DS37", "DS38", "DS39", "DS40" ]
+
+    print("nr ds - ", len(datasets))
+
+
     k_vals = [5, 15, 30, 50] #, 200, 400, 500]
 
     id_number = [1]
 
+
+
     for ds in datasets:
+
 
         for ref in os.listdir("References/" + ds + "_refs"):
 
@@ -374,5 +389,7 @@ if __name__ == '__main__':
 
     #os.system("cat tmp-" + args.v + "-*.fa > new.fa")
     #os.system('rm tmp-*.fa')
+
+
 
 
