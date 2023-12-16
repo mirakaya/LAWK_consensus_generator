@@ -344,10 +344,8 @@ if __name__ == '__main__':
     #            "DS39",  "DS40",  "DS41",  "DS42",  "DS43",  "DS44",  "DS45",  "DS46",  "DS47",  "DS48",  "DS49",  "DS50",
     #            "DS51",  "DS52",  "DS53",  "DS54",  "DS55",  "DS56" ] # ,  "DS57",  "DS58",  "DS59",  "DS60",  "DS61",  "DS62"]
 
-    datasets = [ "DS9", "DS10", "DS11",
-                "DS17", "DS18", "DS19", "DS20", "DS21", "DS22", "DS23", "DS24",
-                "DS25", "DS26", "DS27", "DS28", "DS29", "DS30", "DS31", "DS32",
-                "DS33", "DS34", "DS35", "DS36", "DS37", "DS38", "DS39", "DS40" ]
+    datasets = ["DS17", "DS18", "DS19", "DS20", "DS21", "DS22", "DS23", "DS24"]
+
 
     print("nr ds - ", len(datasets))
 

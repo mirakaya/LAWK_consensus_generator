@@ -33,7 +33,33 @@ def import_files(filename): # import the csv file
 		chunk_list.append(chunk)
 
 	return pd.concat(chunk_list, axis=0)'''
-	return pd.read_csv(filename, sep='\t')
+	data = pd.read_csv(filename, sep='\t', low_memory=False)
+
+	#drop ref columns
+	data = data.drop('Ref_sequence', axis=1)
+	data = data.drop('Nr_A_ref', axis=1)
+	data = data.drop('Nr_T_ref', axis=1)
+	data = data.drop('Nr_C_ref', axis=1)
+	data = data.drop('Nr_G_ref', axis=1)
+	data = data.drop('id', axis=1)
+
+	#Normalize columns
+	data["Nr_A_expected"] = data['Nr_A_expected'] / data['K']
+	data["Nr_C_expected"] = data['Nr_C_expected'] / data['K']
+	data["Nr_T_expected"] = data['Nr_T_expected'] / data['K']
+	data["Nr_G_expected"] = data['Nr_G_expected'] / data['K']
+	data["Nr_N_expected"] = data['Nr_G_expected'] / data['K']
+
+	#add cg content
+	data["CG_content"] = data['Nr_C_expected'] + data['Nr_G_expected']
+	data["AT_content"] = data['Nr_A_expected'] + data['Nr_T_expected']
+
+	print(data.head(10))
+
+	return data
+
+
+
 
 def print_info(data): #prints data information
 
@@ -64,8 +90,8 @@ def transform_categorical_to_code(data):
 	data.Seq_reconstructed = pd.Categorical(data.Seq_reconstructed)
 	data["Seq_reconstructed"] = data.Seq_reconstructed.cat.codes
 
-	data.Ref_sequence = pd.Categorical(data.Ref_sequence)
-	data["Ref_sequence"] = data.Ref_sequence.cat.codes
+	'''data.Ref_sequence = pd.Categorical(data.Ref_sequence)
+	data["Ref_sequence"] = data.Ref_sequence.cat.codes'''
 
 	data.Name_tool = pd.Categorical(data.Name_tool)
 	data["Name_tool"] = data.Name_tool.cat.codes
@@ -111,8 +137,6 @@ def remove_low_correlation(data, cor_target):
 	return list_columns_dropped
 
 def drop_columns(data):
-
-	data = data.drop("id", axis=1, inplace=False)
 
 	try:
 		feature_cols = data.columns
@@ -174,13 +198,9 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 						print(f"Mean absolute error: {mae:.2f}")
 						print(f"Mean absolute percentage error: {mape:.2f}")
 
-						#TODO - implement these metrics
-						ncsd = 1
-						nrc = 1
-						identity = 0
-						model_score = 0
 
-						info = [hidden_layer_sizes, activation, solver, alpha, learning_rate, mse, r2, mae, mape, ncsd, nrc, identity]
+
+						info = [hidden_layer_sizes, activation, solver, alpha, learning_rate, mse, r2, mae, mape]
 
 						print_to_files(info)
 
@@ -197,6 +217,8 @@ def generate_plots(data):
 
 if __name__ == '__main__':
 
+	pd.set_option('display.max_columns', 30)
+
 	filename = "performance_model.tex"
 	file_tsv = "performance_model.tsv"
 	if os.path.exists(filename):
@@ -205,8 +227,10 @@ if __name__ == '__main__':
 		os.remove(file_tsv)
 
 	f_tsv = open(file_tsv, "w")
-	f_tsv.write("hidden_layer_sizes\tactivation\tsolver\talpha\tlearning_rate\tmse\tr2\tmae\tmape\tncsd\tnrc\tidentity\n")
+	f_tsv.write("hidden_layer_sizes\tactivation\tsolver\talpha\tlearning_rate\tmse\tr2\tmae\tmape\n")
 	f_tsv.close()
+
+
 
 
 	init_time = time.perf_counter()
