@@ -350,7 +350,7 @@ if __name__ == '__main__':
     print("nr ds - ", len(datasets))
 
 
-    k_vals = [5, 15, 30, 50] #, 200, 400, 500]
+    k_vals = [5, 10, 15, 30] #, 200, 400, 500]
 
     id_number = [1]
 
