@@ -15,7 +15,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, accuracy_score, mean_squared_error, r2_score, \
 	mean_absolute_percentage_error
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 import random as rd
 import xgboost as xgb
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
@@ -25,15 +25,14 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBRegressor
 
 
+
+
 def import_files(filename): # import the csv file
 
-	'''chunk_list = []
+	chunks = pd.read_csv(filename, sep='\t', low_memory=False, chunksize=500000)
+	data = pd.concat(chunks, ignore_index=True)
 
-	for chunk in pd.read_csv(filename, sep='\t', low_memory=False):
-		chunk_list.append(chunk)
-
-	return pd.concat(chunk_list, axis=0)'''
-	data = pd.read_csv(filename, sep='\t', low_memory=False)
+	print(data)
 
 	#drop ref columns
 	data = data.drop('Ref_sequence', axis=1)
@@ -41,6 +40,7 @@ def import_files(filename): # import the csv file
 	data = data.drop('Nr_T_ref', axis=1)
 	data = data.drop('Nr_C_ref', axis=1)
 	data = data.drop('Nr_G_ref', axis=1)
+	data = data.drop('Nr_N_ref', axis=1)
 	data = data.drop('id', axis=1)
 
 	#Normalize columns
@@ -54,7 +54,11 @@ def import_files(filename): # import the csv file
 	data["CG_content"] = data['Nr_C_expected'] + data['Nr_G_expected']
 	data["AT_content"] = data['Nr_A_expected'] + data['Nr_T_expected']
 
-	print(data.head(10))
+	#drop -1 values
+	data = data.drop(data[data['Actual_correctness'] == -1].index)
+
+	data.to_pickle('stats_2x.pickle')
+
 
 	return data
 
@@ -72,16 +76,7 @@ def print_info(data): #prints data information
 	# Summary of the numerical attributes
 	data.describe()
 
-def get_columns_with_nan_values(data):
-	#get number of rows with missing values
-	print(data.shape[0] - data.dropna().shape[0])
 
-	print(data[data.isnull().any(axis=1)])
-
-	#small number, delete rows
-	data = data.dropna()
-
-	return data
 
 def transform_categorical_to_code(data):
 	data.Virus = pd.Categorical(data.Virus)
@@ -89,6 +84,9 @@ def transform_categorical_to_code(data):
 
 	data.Seq_reconstructed = pd.Categorical(data.Seq_reconstructed)
 	data["Seq_reconstructed"] = data.Seq_reconstructed.cat.codes
+
+	data.Performance_list = pd.Categorical(data.Performance_list)
+	data["Performance_list"] = data.Performance_list.cat.codes
 
 	'''data.Ref_sequence = pd.Categorical(data.Ref_sequence)
 	data["Ref_sequence"] = data.Ref_sequence.cat.codes'''
@@ -104,12 +102,12 @@ def correlation(data):
 	cor = data.corr()  # calculate correlations
 
 	# Correlation graph
-	plt.figure(figsize=(40, 40))
+	plt.figure(figsize=(19, 19))
 	sns.heatmap(cor, annot=True, cmap=sns.diverging_palette(20, 220, n=200), vmin=-1, vmax=1)
 	plt.show()
 
 	# Correlation with output variable
-	cor_target = abs(cor["Actual_correctness"])
+	#cor_target = abs(cor["Actual_correctness"])
 	#list_columns_dropped = remove_low_correlation(data, cor_target)
 
 	#return list_columns_dropped
@@ -207,9 +205,6 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 
 
-
-
-
 def generate_plots(data):
 	data.hist(bins=50, figsize=(20, 15))
 	plt.show()
@@ -231,16 +226,22 @@ if __name__ == '__main__':
 	f_tsv.close()
 
 
-
-
 	init_time = time.perf_counter()
-	data = import_files("stats.tsv")
+
+	base_dataset_name = "stats_2x"
+
+	#if pickle file exists read from there as it is faster
+	if os.path.exists(base_dataset_name + '.pickle'):
+		data = pd.read_pickle(base_dataset_name + '.pickle')
+	else:
+		data = import_files(base_dataset_name + '.tsv')
+
 	print("TIME ->", time.perf_counter() - init_time)
 	print(data.shape)
-	print(data.dtypes)
+	#print(data.dtypes)
 
 	data = transform_categorical_to_code(data)
-	#correlation(data)
+	correlation(data)
 
 
 	X, Y = drop_columns(data)
