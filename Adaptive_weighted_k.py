@@ -50,6 +50,16 @@ def update_correctness(chosen, k):  # updates the list of correct values
 		count += 1
 
 
+def get_value_correctness(key):
+
+	if model == None:
+		return sum(list_correctness[key])
+
+	elif model == "nn": #TODO: add models
+		return 1
+
+
+
 def generate_consensus(output, k):
 	count = 0
 	finished = 0
@@ -71,31 +81,31 @@ def generate_consensus(output, k):
 
 			if base in list_bases:  # check if it is one of the bases
 				if base == "a" or base == "A":
-					add_to_dict("A", sum(list_correctness[key]), dict_bases)
+					add_to_dict("A", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("A")
 
 				elif base == "c" or base == "C":
-					add_to_dict("C", sum(list_correctness[key]), dict_bases)
+					add_to_dict("C", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("C")
 
 				elif base == "t" or base == "T":
-					add_to_dict("T", sum(list_correctness[key]), dict_bases)
+					add_to_dict("T", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("T")
 
 				elif base == "g" or base == "G":
-					add_to_dict("G", sum(list_correctness[key]), dict_bases)
+					add_to_dict("G", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("G")
 
 				elif base == "u" or base == "U":
-					add_to_dict("U", sum(list_correctness[key]), dict_bases)
+					add_to_dict("U", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("U")
@@ -156,6 +166,8 @@ def generate_consensus(output, k):
 
 if __name__ == '__main__':
 
+	model = None
+
 	parser = argparse.ArgumentParser(description="Index",
 	                                 usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k> -m <ML model>")
 
@@ -167,9 +179,8 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# TODO: treat m args values
-
 	if args.m == "nn":
-		print("load mlpregressor")
+		model = args.m
 
 	filename = args.i
 	read_file(filename)
