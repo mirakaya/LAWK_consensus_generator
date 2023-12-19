@@ -27,7 +27,7 @@ from xgboost import XGBRegressor
 
 
 
-def import_files(filename): # import the csv file
+def import_files(filename, name_pickle): # import the csv file
 
 	chunks = pd.read_csv(filename, sep='\t', low_memory=False, chunksize=500000)
 	data = pd.concat(chunks, ignore_index=True)
@@ -57,7 +57,9 @@ def import_files(filename): # import the csv file
 	#drop -1 values
 	data = data.drop(data[data['Actual_correctness'] == -1].index)
 
-	data.to_pickle('stats_2x.pickle')
+	data = data.drop('K', axis=1)
+
+	data.to_pickle(name_pickle)
 
 
 	return data
@@ -202,6 +204,24 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 						print_to_files(info)
 
+def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
+	param_grid = {
+		'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
+		'activation': ['relu'],
+		'solver': ['sgd', 'adam'],
+		'alpha': [0.0001, 0.001, 0.01, 0.1],
+		'learning_rate': ['constant', 'adaptive']
+	}
+
+	model = MLPRegressor(random_state=42, early_stopping = True)
+
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2)
+	cv.fit(X_train, y_train)
+	print(cv.best_estimator_)
+	print(cv.best_score_)
+	print(cv.best_params_)
+
+	return cv
 
 
 
@@ -228,52 +248,43 @@ if __name__ == '__main__':
 
 	init_time = time.perf_counter()
 
-	base_dataset_name = "stats_2x"
+	base_dataset_name = "stats"
 
 	#if pickle file exists read from there as it is faster
 	if os.path.exists(base_dataset_name + '.pickle'):
 		data = pd.read_pickle(base_dataset_name + '.pickle')
 	else:
-		data = import_files(base_dataset_name + '.tsv')
+		data = import_files(base_dataset_name + '.tsv', base_dataset_name + '.pickle')
+
 
 	print("TIME ->", time.perf_counter() - init_time)
 	print(data.shape)
-	#print(data.dtypes)
+	print(data.dtypes)
 
 	data = transform_categorical_to_code(data)
-	correlation(data)
+	#correlation(data)
 
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
-	cross_validation_MLPRegressor(X_train, y_train, y_test)
+	#cross_validation_MLPRegressor(X_train, y_train, y_test)
 
-	#data.plot(kind='scatter', x='Actual_correctness', y='Correctness_expected', color="red")
-	#plt.show()
+	model = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
 
-	#model = XGBRegressor(random_state=42)
-	#model = KNeighborsRegressor(n_neighbors=5)
-	#model = MLPRegressor(activation='relu', solver='adam', alpha=0.01)
-
-	#model.fit(X_train, y_train)
-	# Evaluate the model on the testing data
-'''	y_pred = model.predict(X_test)
-
-
-
-	print(y_pred)'''
-
+	model.fit(X_train, y_train)
+	y_pred = model.predict(X_test)
 
 	# Evaluate the model's performance
-'''	mse = mean_squared_error(y_test, y_pred)
+	mse = mean_squared_error(y_test, y_pred)
 	r2 = r2_score(y_test, y_pred)
 	mae = mean_absolute_error(y_test, y_pred)
 	mape = mean_absolute_percentage_error(y_test, y_pred)
+	print(hidden_layer_sizes, activation, solver, alpha, learning_rate)
 	print(f"Mean squared error: {mse:.2f}")
 	print(f"R-squared: {r2:.2f}")
 	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")'''
+	print(f"Mean absolute percentage error: {mape:.2f}")
 
 
 

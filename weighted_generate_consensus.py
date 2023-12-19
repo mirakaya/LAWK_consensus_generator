@@ -344,13 +344,13 @@ if __name__ == '__main__':
     #            "DS39",  "DS40",  "DS41",  "DS42",  "DS43",  "DS44",  "DS45",  "DS46",  "DS47",  "DS48",  "DS49",  "DS50",
     #            "DS51",  "DS52",  "DS53",  "DS54",  "DS55",  "DS56" ] # ,  "DS57",  "DS58",  "DS59",  "DS60",  "DS61",  "DS62"]
 
-    datasets = ["DS17", "DS18", "DS19", "DS20", "DS21", "DS22", "DS23", "DS24"]
+    datasets = ["DS20", "DS21", "DS22", "DS23", "DS24"]
 
 
     print("nr ds - ", len(datasets))
 
 
-    k_vals = [5, 10, 15, 30] #, 200, 400, 500]
+    k_vals = [5, 15, 30] #, 200, 400, 500]
 
     id_number = [1]
 
