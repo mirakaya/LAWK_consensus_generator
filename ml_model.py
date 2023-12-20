@@ -330,7 +330,7 @@ if __name__ == '__main__':
 
 
 	print("Starting gradientboosting")
-	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
+	cross_validation_GradientBoostingRegression(X_train, y_train, X_test) #{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
 
 	print("Starting SVR")
 	cross_validation_SVR(X_train, y_train, X_test)
