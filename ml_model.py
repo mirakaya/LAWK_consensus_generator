@@ -10,9 +10,9 @@ import pandas as pd
 from pandas import read_table, read_csv
 import seaborn as sns
 from sklearn import metrics
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import mean_absolute_error, accuracy_score, mean_squared_error, r2_score, \
 	mean_absolute_percentage_error
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
@@ -20,7 +20,7 @@ import random as rd
 import xgboost as xgb
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.svm import SVC
+from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBRegressor
 
@@ -207,6 +207,7 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
 		'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
+		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20,5), (20, 20), (20, 30)],
 		'activation': ['relu'],
 		'solver': ['sgd', 'adam'],
 		'alpha': [0.0001, 0.001, 0.01, 0.1],
@@ -215,7 +216,44 @@ def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 
 	model = MLPRegressor(random_state=42, early_stopping = True)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2)
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
+	cv.fit(X_train, y_train)
+	print(cv.best_estimator_)
+	print(cv.best_score_)
+	print(cv.best_params_)
+
+	return cv
+
+def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
+
+	param_grid = {
+		'loss': ["squared_error", "absolute_error"],
+		'learning_rate': [0.1, 0.2, 0.3],
+		'criterion': ["friedman_mse", "squared_error"],
+		'n_estimators': [15, 30, 50],
+		'min_samples_split': [2, 4]
+	}
+
+	model = GradientBoostingRegressor(random_state=42)
+
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
+	cv.fit(X_train, y_train)
+	print(cv.best_params_)
+
+	return cv
+
+def cross_validation_SVR(X_train, y_train, y_test):
+
+	param_grid = {
+		'kernel': ["linear", "poly", "rbf", "sigmoid", "precomputed"],
+		'epsilon': [0.001, 0.001, 0.01, 0.1, 1],
+		'C': [1, 5, 10, 50, 100],
+		'gamma': ["scale", "auto"]
+	}
+
+	model = SVR()
+
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -224,6 +262,25 @@ def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	return cv
 
 
+
+def cross_validation_LinearRegression(X_train, y_train, y_test):
+
+	param_grid = {
+		'fit_intercept': [True, False],
+		'n_jobs': [-1],
+		'C': [1, 5, 10, 50, 100],
+		'gamma': ["scale", "auto"]
+	}
+
+	model = LinearRegression(random_state=42)
+
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2)
+	cv.fit(X_train, y_train)
+	print(cv.best_estimator_)
+	print(cv.best_score_)
+	print(cv.best_params_)
+
+	return cv
 
 def generate_plots(data):
 	data.hist(bins=50, figsize=(20, 15))
@@ -266,25 +323,25 @@ if __name__ == '__main__':
 
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
 
-	model = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
 
-	model.fit(X_train, y_train)
-	y_pred = model.predict(X_test)
 
-	# Evaluate the model's performance
-	mse = mean_squared_error(y_test, y_pred)
-	r2 = r2_score(y_test, y_pred)
-	mae = mean_absolute_error(y_test, y_pred)
-	mape = mean_absolute_percentage_error(y_test, y_pred)
-	print(hidden_layer_sizes, activation, solver, alpha, learning_rate)
-	print(f"Mean squared error: {mse:.2f}")
-	print(f"R-squared: {r2:.2f}")
-	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")
+	print("Starting gradientboosting")
+	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
+
+	print("Starting SVR")
+	cross_validation_SVR(X_train, y_train, X_test)
+
+	print("Starting MLPRegressor")
+	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+
+	#model_mlp = MLPRegressor(early_stopping=True, hidden_layer_sizes=(20,), random_state=42)
+
+
+
 
 
 

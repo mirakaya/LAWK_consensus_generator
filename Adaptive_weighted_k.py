@@ -55,7 +55,7 @@ def get_value_correctness(key):
 	if model == None:
 		return sum(list_correctness[key])
 
-	elif model == "nn": #TODO: add models
+	else: #TODO: use model
 		return 1
 
 
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
 	# TODO: treat m args values
 	if args.m == "nn":
-		model = args.m
+		model = args.m //change this by load model
 
 	filename = args.i
 	read_file(filename)
