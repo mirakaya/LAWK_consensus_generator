@@ -36,11 +36,11 @@ def PCA_analysis_2D(X, y):
 
 
 	# Plot the results
-	plt.scatter(pca_df[:, 0], pca_df[:, 1], c=y, cmap='viridis', edgecolor='k')
+	'''plt.scatter(pca_df[:, 0], pca_df[:, 1], c=y, cmap='viridis', edgecolor='k')
 	plt.title('PCA of the dataset')
 	plt.xlabel('Principal Component 1')
 	plt.ylabel('Principal Component 2')
-	plt.show()
+	plt.show()'''
 
 
 
@@ -51,7 +51,6 @@ def PCA_analysis_2D(X, y):
 		y='Principal Component 2',
 		data=data,
 		hue=y,
-		fit_reg=False,
 		legend=True
 	)
 
