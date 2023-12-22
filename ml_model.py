@@ -57,8 +57,6 @@ def import_files(filename, name_pickle): # import the csv file
 	#drop -1 values
 	data = data.drop(data[data['Actual_correctness'] == -1].index)
 
-	data = data.drop('K', axis=1)
-
 	data.to_pickle(name_pickle)
 
 
@@ -106,7 +104,10 @@ def correlation(data):
 	# Correlation graph
 	plt.figure(figsize=(19, 19))
 	sns.heatmap(cor, annot=True, cmap=sns.diverging_palette(20, 220, n=200), vmin=-1, vmax=1)
+	plt.savefig('correlation.pdf')
+	plt.savefig('correlation.jpg')
 	plt.show()
+
 
 	# Correlation with output variable
 	#cor_target = abs(cor["Actual_correctness"])
@@ -216,7 +217,7 @@ def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 
 	model = MLPRegressor(random_state=42, early_stopping = True)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=2)
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -242,18 +243,17 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 
 	return cv
 
-def cross_validation_SVR(X_train, y_train, y_test):
+def cross_validation_NNR(X_train, y_train, y_test):
 
 	param_grid = {
-		'kernel': ["linear", "poly", "rbf", "sigmoid", "precomputed"],
-		'epsilon': [0.001, 0.001, 0.01, 0.1, 1],
-		'C': [1, 5, 10, 50, 100],
-		'gamma': ["scale", "auto"]
+		'n_neighbors': [1, 3, 5, 7, 9, 15],
+		'weights': ['uniform', 'distance'],
+		'algorithm': ['brute', 'auto'],
 	}
 
-	model = SVR()
+	model = KNeighborsRegressor()
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=2, error_score='raise')
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -319,24 +319,25 @@ if __name__ == '__main__':
 	print(data.dtypes)
 
 	data = transform_categorical_to_code(data)
-	#correlation(data)
+	correlation(data)
 
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, train_size=0.999, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
 
 
+	print("Starting MLPRegressor")
+	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
 
 	print("Starting gradientboosting")
 	cross_validation_GradientBoostingRegression(X_train, y_train, X_test) #{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
 
-	print("Starting SVR")
-	cross_validation_SVR(X_train, y_train, X_test)
+	#print("Starting NNR")
+	#cross_validation_NNR(X_train, y_train, X_test)
 
-	print("Starting MLPRegressor")
-	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+
 
 	#model_mlp = MLPRegressor(early_stopping=True, hidden_layer_sizes=(20,), random_state=42)
 
