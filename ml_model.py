@@ -237,7 +237,7 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 
 	model = GradientBoostingRegressor(random_state=42)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2, error_score='raise')
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2)
 	cv.fit(X_train, y_train)
 	print(cv.best_params_)
 
