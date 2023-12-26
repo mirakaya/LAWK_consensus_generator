@@ -207,8 +207,8 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
-		'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
-		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20,5), (20, 20), (20, 30)],
+		#'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
+		'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20,5), (20, 20), (20, 30)],
 		'activation': ['relu'],
 		'solver': ['sgd', 'adam'],
 		'alpha': [0.0001, 0.001, 0.01, 0.1],
@@ -237,7 +237,7 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 
 	model = GradientBoostingRegressor(random_state=42)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=1, cv=2)
+	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=2)
 	cv.fit(X_train, y_train)
 	print(cv.best_params_)
 
@@ -323,16 +323,21 @@ if __name__ == '__main__':
 
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, train_size=0.999, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, train_size=None, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
 
 
 	print("Starting MLPRegressor")
 	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+	#MLPRegressor(alpha=0.01, early_stopping=True, hidden_layer_sizes=(20,),
+	#             random_state=42)
+	#0.8583069805948544
+	#{'activation': 'relu', 'alpha': 0.01, 'hidden_layer_sizes': (20,), 'learning_rate': 'constant', 'solver': 'adam'}
 
-	print("Starting gradientboosting")
-	cross_validation_GradientBoostingRegression(X_train, y_train, X_test) #{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
+
+	#print("Starting gradientboosting")
+	#cross_validation_GradientBoostingRegression(X_train, y_train, X_test) #{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
 
 	#print("Starting NNR")
 	#cross_validation_NNR(X_train, y_train, X_test)
