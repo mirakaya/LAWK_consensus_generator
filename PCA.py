@@ -7,8 +7,10 @@ import plotly.express as px
 from sklearn.manifold import TSNE
 import seaborn as sns
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
-from ml_model import import_files, transform_categorical_to_code, drop_columns
+from ml_model import import_files, transform_categorical_to_code, drop_columns, correlation
+
 
 def PCA_analysis_2D(X, y):
 
@@ -120,25 +122,43 @@ def PCA_analysis_3D(X, y):
 
 
 
-def t_sne_analysis(X):
+def t_sne_analysis(X, y):
 
 	# Create a t-SNE model with perplexity=30 and learning rate=500
 	tsne = TSNE(n_components=2)
 	X_tsne = tsne.fit_transform(X)
 
+	data['Principal Component 1'] = X_tsne[:, 0]
+	data['Principal Component 2'] = X_tsne[:, 1]
+	data['Principal Component 3'] = X_tsne[:, 2]
+
+	print('Explained variation per principal component: {}'.format(pca.explained_variance_ratio_))
+
 	# Plot the t-SNE visualization
-	plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=data.target_names)
-	plt.xlabel('t-SNE 1st dimension')
-	plt.ylabel('t-SNE 2nd dimension')
-	plt.title('t-SNE visualization of iris dataset')
+	sns.set()
+	# Plot 2D t-SNE Graph
+	sns.scatterplot(
+		x='Principal Component 1',
+		y='Principal Component 2',
+		data=data,
+		hue=y,
+		legend=True
+	)
+
+	plt.title('2D t-SNE Graph of the Dataset')
 	plt.show()
 
+def get_boxplot(data):
+	plt.figure(figsize=(25, 10))
+	sns.boxplot(data=data, palette="Set2")
+	plt.xticks(rotation=0)
+	plt.show()
 
 if __name__ == '__main__':
 
 	pd.set_option('display.max_columns', 30)
 
-	base_dataset_name = "stats_2x"
+	base_dataset_name = "stats"
 
 	# if pickle file exists read from there as it is faster
 	if os.path.exists(base_dataset_name + '.pickle'):
@@ -146,15 +166,24 @@ if __name__ == '__main__':
 	else:
 		data = import_files(base_dataset_name + '.tsv', base_dataset_name + '.pickle')
 
+
+
 	print(data.shape)
 	data = transform_categorical_to_code(data)
+	correlation(data)
+	scaler = MinMaxScaler(feature_range=(0, 1))
+	data[data.columns] = scaler.fit_transform(data[data.columns])
 
-	print(data.describe())
+
+
+
 
 	X, y = drop_columns(data)
 
-	PCA_analysis_2D(X, y)
-	#PCA_analysis_3D(X, y)
-	#t_sne_analysis(X)
+	correlation(data)
+	get_boxplot(data)
+	#PCA_analysis_2D(X, y)
 
+	t_sne_analysis(X, y)
+	PCA_analysis_3D(X, y)
 
