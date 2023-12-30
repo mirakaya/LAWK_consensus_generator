@@ -358,16 +358,15 @@ if __name__ == '__main__':
 	#data.to_csv('example.tsv', sep="\t")
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, train_size=0.8, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=None, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
 
-	'''print("Starting gradientboosting")
+	print("Starting gradientboosting")
 	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
 
 	print("Starting MLPRegressor")
 	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
-'''
 
 
 
@@ -384,7 +383,7 @@ if __name__ == '__main__':
 
 
 
-	gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.3, loss='squared_error', min_samples_split=2, n_estimators=50)
+	'''gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.3, loss='squared_error', min_samples_split=2, n_estimators=50)
 	gbr_model.fit(X_train, y_train)
 
 	y_pred = gbr_model.predict(X_test)
@@ -397,13 +396,13 @@ if __name__ == '__main__':
 	print(f"Mean squared error: {mse:.2f}")
 	print(f"R-squared: {r2:.2f}")
 	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")
+	print(f"Mean absolute percentage error: {mape:.2f}")'''
 
 
 
-	# save the model
+	'''# save the model
 	filename = 'gbr_model.sav'
-	pickle.dump(gbr_model, open(filename, 'wb'))
+	pickle.dump(gbr_model, open(filename, 'wb'))'''
 	#{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
 
 	#print("Starting NNR")
