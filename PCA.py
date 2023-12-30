@@ -292,9 +292,9 @@ if __name__ == '__main__':
 	data = transform_categorical_to_code(data)
 
 	# correlation(data)
-	get_boxplot(data)
+	#get_boxplot(data)
 
-	#data = data.sample(200, replace=False, random_state=42)
+	data = data.sample(500000, replace=False, random_state=42)
 
 	print(data.shape)
 
