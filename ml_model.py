@@ -166,14 +166,7 @@ def remove_low_correlation(data, cor_target):
 
 def drop_columns(data):
 
-	try:
-		feature_cols = data.columns
-	except:
-		pass
-
-	X = data[feature_cols]  # features
-
-	X = X.drop('Actual_correctness', axis=1)
+	X = data.drop("Actual_correctness", axis=1).values
 	Y = data.Actual_correctness
 
 	return X, Y
@@ -236,17 +229,17 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
-		'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
-		#'hidden_layer_sizes': [(20,)],#, (19,), (18,), (21,), (22,)],#, (20,5), (20, 20), (20, 30)],
-		'activation': ['identity', 'logistic', 'tanh', 'relu'],
-		'solver': ['lbfgs', 'sgd', 'adam'],
-		'alpha': [0.001, 0.01, 0.1],
+		'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
+		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20, 5), (20, 20), (20, 30)],
+		'activation': ['relu'],
+		'solver': ['adam', 'sgd'],
+		'alpha': [0.01, 0.005, 0.05],
 		'learning_rate': ['constant', 'adaptive']
 	}
 
 	model = MLPRegressor(random_state=42, early_stopping = True)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=3)
+	cv = GridSearchCV(model, param_grid, n_jobs=6, verbose=10, cv=3)
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -266,7 +259,7 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 
 	model = GradientBoostingRegressor(random_state=42)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=3)
+	cv = GridSearchCV(model, param_grid, n_jobs=6, verbose=10, cv=3)
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -318,6 +311,28 @@ def generate_plots(data):
 	plt.show()
 
 
+def fit_and_predict(model, name):
+
+	print("Testing the " + name + "...")
+
+	model.fit(X_train, y_train)
+
+	y_pred = model.predict(X_test)
+
+	# Evaluate the model's performance
+	mse = mean_squared_error(y_test, y_pred)
+	r2 = r2_score(y_test, y_pred)
+	mae = mean_absolute_error(y_test, y_pred)
+	mape = mean_absolute_percentage_error(y_test, y_pred)
+	print(f"Mean squared error: {mse:.2f}")
+	print(f"R-squared: {r2:.2f}")
+	print(f"Mean absolute error: {mae:.2f}")
+	print(f"Mean absolute percentage error: {mape:.2f}")
+
+	# save model
+	filename = name + '.sav'
+	pickle.dump(model, open(filename, 'wb'))
+
 if __name__ == '__main__':
 
 	pd.set_option('display.max_columns', 30)
@@ -352,69 +367,30 @@ if __name__ == '__main__':
 	data = transform_categorical_to_code(data)
 	print(data.dtypes)
 	print(data.shape)
+	#
 	correlation(data)
 
 	# saving as tsv file
 	#data.to_csv('example.tsv', sep="\t")
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=None, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
+	print("Starting MLPRegressor")
+	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
 
 	print("Starting gradientboosting")
 	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
 
-	print("Starting MLPRegressor")
-	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+	'''mlp_model = MLPRegressor(activation='relu', alpha=0.005, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
+
+	fit_and_predict(mlp_model, "mlp_model")
 
 
+	gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.2, loss='squared_error', min_samples_split=2, n_estimators=50, random_state=42)
 
-
-
-	'''nn_model = MLPRegressor(alpha=0.01, early_stopping=True, hidden_layer_sizes=(20,),
-	             random_state=42)
-	nn_model.fit(X_train, y_train)
-	# save the model
-	filename = 'nn_model.sav'
-	pickle.dump(nn_model, open(filename, 'wb'))'''
-#0.8583069805948544
-	#{'activation': 'relu', 'alpha': 0.01, 'hidden_layer_sizes': (20,), 'learning_rate': 'constant', 'solver': 'adam'}
-
-
-
-	'''gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.3, loss='squared_error', min_samples_split=2, n_estimators=50)
-	gbr_model.fit(X_train, y_train)
-
-	y_pred = gbr_model.predict(X_test)
-
-	# Evaluate the model's performance
-	mse = mean_squared_error(y_test, y_pred)
-	r2 = r2_score(y_test, y_pred)
-	mae = mean_absolute_error(y_test, y_pred)
-	mape = mean_absolute_percentage_error(y_test, y_pred)
-	print(f"Mean squared error: {mse:.2f}")
-	print(f"R-squared: {r2:.2f}")
-	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")'''
-
-
-
-	'''# save the model
-	filename = 'gbr_model.sav'
-	pickle.dump(gbr_model, open(filename, 'wb'))'''
-	#{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
-
-	#print("Starting NNR")
-	#cross_validation_NNR(X_train, y_train, X_test)
-
-
-
-	#model_mlp = MLPRegressor(early_stopping=True, hidden_layer_sizes=(20,), random_state=42)
-
-
-
-
+	fit_and_predict(gbr_model, "gbr_model")'''
 
 
 

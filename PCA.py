@@ -256,8 +256,8 @@ def get_boxplot(df):
 	axs[10].set_xlabel('Performance_list')
 	axs[11].boxplot(df['CG_content'])
 	axs[11].set_xlabel('CG_content')
-	axs[12].boxplot(df['CG_content'])
-	axs[12].set_xlabel('CG_content')
+	axs[12].boxplot(df['AT_content'])
+	axs[12].set_xlabel('AT_content')
 	axs[13].boxplot(df['Actual_correctness'])
 	axs[13].set_xlabel('Actual_correctness')
 
