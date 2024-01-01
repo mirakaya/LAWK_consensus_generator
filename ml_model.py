@@ -1,3 +1,4 @@
+import pickle
 import time
 import warnings
 
@@ -57,6 +58,11 @@ def import_files(filename, name_pickle): # import the csv file
 	#drop -1 values
 	data = data.drop(data[data['Actual_correctness'] == -1].index)
 
+	#rearrange columns
+	data = data[['Virus', 'Name_tool', 'K', 'Seq_reconstructed',
+	             'Nr_A_expected', 'Nr_T_expected', 'Nr_C_expected', 'Nr_G_expected', 'Nr_N_expected',
+	             'Correctness_expected', 'Performance_list', 'CG_content', 'AT_content', 'Actual_correctness']]
+
 	data.to_pickle(name_pickle)
 
 
@@ -79,20 +85,39 @@ def print_info(data): #prints data information
 
 
 def transform_categorical_to_code(data):
-	data.Virus = pd.Categorical(data.Virus)
+
+	data.replace({'Virus': {'B19V': 1, 'HPV68': 2, 'VZV': 3, 'MCPyV': 4},
+	              'Name_tool': {"coronaspades": 1, "haploflow": 2, "lazypipe":3, "metaspades":4,
+	                            "metaviralspades":5, "pehaplo":6, "qure":7, "qvg":8, "spades":9,
+	                            "ssake":10, "tracespipe":11, "tracespipelite":12, "v-pipe":13,
+	                            "virgena":14, "vispa":15}}, inplace=True)
+
+	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace ='[aA]', value = '1', regex = True)
+	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace='[cC]', value='2', regex=True)
+	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace='[tT]', value='3', regex=True)
+	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace='[gG]', value='4', regex=True)
+	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace='[nN]', value='0', regex=True)
+
+
+	data.astype({'Performance_list': 'int64'})
+	data=data.apply(pd.to_numeric, errors='coerce')
+
+	'''data.Virus = pd.Categorical(data.Virus)
 	data["Virus"] = data.Virus.cat.codes
 
-	data.Seq_reconstructed = pd.Categorical(data.Seq_reconstructed)
-	data["Seq_reconstructed"] = data.Seq_reconstructed.cat.codes
+	data.Name_tool = pd.Categorical(data.Name_tool)
+	data["Name_tool"] = data.Name_tool.cat.codes'''
 
-	data.Performance_list = pd.Categorical(data.Performance_list)
-	data["Performance_list"] = data.Performance_list.cat.codes
+	'''data.Seq_reconstructed = pd.Categorical(data.Seq_reconstructed)
+	data["Seq_reconstructed"] = data.Seq_reconstructed.cat.codes'''
+
+	'''data.Performance_list = pd.Categorical(data.Performance_list)
+	data["Performance_list"] = data.Performance_list.cat.codes'''
 
 	'''data.Ref_sequence = pd.Categorical(data.Ref_sequence)
 	data["Ref_sequence"] = data.Ref_sequence.cat.codes'''
 
-	data.Name_tool = pd.Categorical(data.Name_tool)
-	data["Name_tool"] = data.Name_tool.cat.codes
+
 
 
 	return data
@@ -100,6 +125,8 @@ def transform_categorical_to_code(data):
 def correlation(data):
 	# Delete less relevant features based on the correlation with the output variable
 	cor = data.corr()  # calculate correlations
+
+	print(cor)
 
 	# Correlation graph
 	plt.figure(figsize=(19, 19))
@@ -139,12 +166,7 @@ def remove_low_correlation(data, cor_target):
 
 def drop_columns(data):
 
-	try:
-		feature_cols = data.columns
-	except:
-		pass
-
-	X = data[feature_cols]  # features
+	X = data.drop("Actual_correctness", axis=1).values
 	Y = data.Actual_correctness
 
 	return X, Y
@@ -207,17 +229,17 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
-		#'hidden_layer_sizes': [(15, 30), (15, 15), (10,), (20,), (10,10), (20,10), (10,20), (20,20)],
-		'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20,5), (20, 20), (20, 30)],
+		'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
+		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20, 5), (20, 20), (20, 30)],
 		'activation': ['relu'],
-		'solver': ['sgd', 'adam'],
-		'alpha': [0.0001, 0.001, 0.01, 0.1],
+		'solver': ['adam', 'sgd'],
+		'alpha': [0.01, 0.005, 0.05],
 		'learning_rate': ['constant', 'adaptive']
 	}
 
 	model = MLPRegressor(random_state=42, early_stopping = True)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=2)
+	cv = GridSearchCV(model, param_grid, n_jobs=6, verbose=10, cv=3)
 	cv.fit(X_train, y_train)
 	print(cv.best_estimator_)
 	print(cv.best_score_)
@@ -237,8 +259,10 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 
 	model = GradientBoostingRegressor(random_state=42)
 
-	cv = GridSearchCV(model, param_grid, n_jobs=-1, verbose=10, cv=2)
+	cv = GridSearchCV(model, param_grid, n_jobs=6, verbose=10, cv=3)
 	cv.fit(X_train, y_train)
+	print(cv.best_estimator_)
+	print(cv.best_score_)
 	print(cv.best_params_)
 
 	return cv
@@ -287,6 +311,28 @@ def generate_plots(data):
 	plt.show()
 
 
+def fit_and_predict(model, name):
+
+	print("Testing the " + name + "...")
+
+	model.fit(X_train, y_train)
+
+	y_pred = model.predict(X_test)
+
+	# Evaluate the model's performance
+	mse = mean_squared_error(y_test, y_pred)
+	r2 = r2_score(y_test, y_pred)
+	mae = mean_absolute_error(y_test, y_pred)
+	mape = mean_absolute_percentage_error(y_test, y_pred)
+	print(f"Mean squared error: {mse:.2f}")
+	print(f"R-squared: {r2:.2f}")
+	print(f"Mean absolute error: {mae:.2f}")
+	print(f"Mean absolute percentage error: {mape:.2f}")
+
+	# save model
+	filename = name + '.sav'
+	pickle.dump(model, open(filename, 'wb'))
+
 if __name__ == '__main__':
 
 	pd.set_option('display.max_columns', 30)
@@ -316,39 +362,35 @@ if __name__ == '__main__':
 
 	print("TIME ->", time.perf_counter() - init_time)
 	print(data.shape)
-	print(data.dtypes)
+
 
 	data = transform_categorical_to_code(data)
+	print(data.dtypes)
+	print(data.shape)
+	#
 	correlation(data)
 
+	# saving as tsv file
+	#data.to_csv('example.tsv', sep="\t")
 
 	X, Y = drop_columns(data)
-	X_train, X_test, y_train, y_test = train_test_split(X, Y, train_size=None, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
 	#cross_validation_MLPRegressor(X_train, y_train, y_test)
-
-
 	print("Starting MLPRegressor")
 	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
-	#MLPRegressor(alpha=0.01, early_stopping=True, hidden_layer_sizes=(20,),
-	#             random_state=42)
-	#0.8583069805948544
-	#{'activation': 'relu', 'alpha': 0.01, 'hidden_layer_sizes': (20,), 'learning_rate': 'constant', 'solver': 'adam'}
+
+	print("Starting gradientboosting")
+	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
+
+	'''mlp_model = MLPRegressor(activation='relu', alpha=0.005, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
+
+	fit_and_predict(mlp_model, "mlp_model")
 
 
-	#print("Starting gradientboosting")
-	#cross_validation_GradientBoostingRegression(X_train, y_train, X_test) #{'criterion': 'friedman_mse', 'learning_rate': 0.3, 'loss': 'squared_error', 'min_samples_split': 2, 'n_estimators': 50}
+	gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.2, loss='squared_error', min_samples_split=2, n_estimators=50, random_state=42)
 
-	#print("Starting NNR")
-	#cross_validation_NNR(X_train, y_train, X_test)
-
-
-
-	#model_mlp = MLPRegressor(early_stopping=True, hidden_layer_sizes=(20,), random_state=42)
-
-
-
-
+	fit_and_predict(gbr_model, "gbr_model")'''
 
 
 

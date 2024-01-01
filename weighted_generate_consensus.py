@@ -42,7 +42,8 @@ def read_file (path): #read file and add it to a dictionary
                 try:
                     name_tool = line.split("[")[1].split("]")[0]
                 except:
-                    print(line.split("["))
+                    pass
+                    #print(line.split("["))
                 last_line_header = True
 
 
@@ -52,7 +53,7 @@ def read_file (path): #read file and add it to a dictionary
     file.close()
 
 
-def update_correctness(chosen, k, count_pos): #updates the list of correct values
+def update_correctness(chosen, k): #updates the list of correct values
     count = 0
 
     for i in list_correctness:
@@ -65,26 +66,6 @@ def update_correctness(chosen, k, count_pos): #updates the list of correct value
 
         else:
             list_correctness[count].append(0)
-
-
-
-        dict_infos.get(str(count_pos) + "_" + str(count)).add_performance_list(list_correctness[count])
-        # print("new-", str(count_pos) + "_" + str(count), dict_infos.get(str(count_pos) + "_" + str(count)).performance_list)
-        dict_infos.get(str(count_pos) + "_" + str(count)).add_correctness_expected(sum(list_correctness[count]))
-
-        refseq = get_ref_sequence(count_pos,
-                                  len(dict_infos.get(str(count_pos) + "_" + str(count)).sequence_reconstructed))
-        dict_infos.get(str(count_pos) + "_" + str(count)).add_ref_sequence(refseq)
-
-        ans = dict_infos.get(str(count_pos) + "_" + str(count)).write_to_file(id_number[0])
-        if ans == True:
-            id_number[0] = id_number[0] + 1
-
-
-
-
-
-        #time.sleep(1)
 
         count += 1
 
@@ -125,9 +106,13 @@ def read_ref_sequence(virus, path):
 def get_ref_sequence(count, K):
 
     if count > K:
-        return ref_seq[count - 1: count + K - 1]
+        return ref_seq[count - K : count ]
+    elif K == 0:
+        #print(K, count)
+        return []
     else:
-        return ref_seq[0: K]
+        return ref_seq[: K]
+
 
 
 
@@ -143,6 +128,9 @@ def generate_consensus (output, k):
     consensus = []
     keys_finished = []
 
+    curr_K = 0
+
+
     while finished < len(dict_content):
 
 
@@ -154,11 +142,19 @@ def generate_consensus (output, k):
 
             info = Formater()
             info.add_id(str(count) + "_" + str(key))
-            dict_infos[str(count) + "_" + str(key)] = info
+            info.add_name_tool(name_tools[key])
+            ref_seq = get_ref_sequence(count ,len(list_last_values[key]))
+            info.add_K(len(list_last_values[key]))
+            info.add_sequence_reconstructed(list_last_values[key])
+            info.add_ref_sequence(ref_seq)
+            info.add_virus(virus)
+            info.add_performance_list(list_correctness[key])
+            info.add_correctness_expected(sum(list_correctness[key]))
 
-            dict_infos.get(str(count) + "_" + str(key)).add_key(key)
-            dict_infos.get(str(count) + "_" + str(key)).add_virus(virus)
-            dict_infos.get(str(count) + "_" + str(key)).add_name_tool(name_tools[key])
+
+            ans = info.write_to_file(id_number[0])
+            if ans == True:
+                id_number[0] = id_number[0] + 1
 
             try:
                 base = dict_content.get(key)[count]
@@ -205,38 +201,17 @@ def generate_consensus (output, k):
                         list_last_values[key].pop(0)
                     list_last_values[key].append("N")
 
+                if curr_K < k:
+                    curr_K += 1
+
+
             else:
                 if len(list_last_values[key]) == k:
                     list_last_values[key].pop(0)
                 list_last_values[key].append("N")
 
-            dict_infos.get(str(count) + "_" + str(key)).add_K(len(list_last_values[key]))
-            #print(dict_infos.get(str(count) + "_" + str(key)).id)
-            #print("\n")
-            #print("cut list ", dict_content[key][count-1:count-1+dict_infos.get(str(count) + "_" + str(key)).K])
-            #print(dict_infos.get(str(count) + "_" + str(key)).id, list_last_values[key])
 
 
-
-
-            if count < dict_infos.get(str(count) + "_" + str(key)).K:
-                seq = dict_content[key][0:dict_infos.get(str(count) + "_" + str(key)).K].upper().replace(
-                    '-', 'N')
-
-            else:
-                seq = dict_content[key][count - dict_infos.get(str(count) + "_" + str(key)).K +1:count +1].upper().replace('-', 'N')
-
-
-            #seq = dict_content[key][count - 1: count + dict_infos.get(str(count) + "_" + str(key)).K - 1].upper().replace('-', 'N')
-            dict_infos.get(str(count) + "_" + str(key)).add_sequence_reconstructed(seq)
-
-            #print(dict_infos.get(str(count) + "_" + str(key)).sequence_reconstructed)
-            #time.sleep(1)
-            #print(str(count) + "_" + str(key), dict_infos.get(str(count) + "_" + str(key)).sequence_reconstructed)
-
-            #time.sleep(1)
-
-        #print(dict_bases.values())
 
         try:
             max_val = max(dict_bases.values())
@@ -249,29 +224,29 @@ def generate_consensus (output, k):
         if len(max_keys) == 1:
             consensus.append(max_keys[0])
             #print("Max keys - ", max_keys[0])
-            update_correctness(max_keys[0], k, count)
+            update_correctness(max_keys[0], k)
         elif max_val == 0:
             consensus.append("N")
-            update_correctness("N", k, count)
+            update_correctness("N", k)
         elif len(max_keys) > 1:
             if "A" in max_keys:
                 consensus.append("A")
-                update_correctness("A", k, count)
+                update_correctness("A", k)
             elif "T" in max_keys:
                 consensus.append("T")
-                update_correctness("T", k, count)
+                update_correctness("T", k)
             elif "C" in max_keys:
                 consensus.append("C")
-                update_correctness("C", k, count)
+                update_correctness("C", k)
             elif "G" in max_keys:
                 consensus.append("G")
-                update_correctness("G", k, count)
+                update_correctness("G", k)
             elif "U" in max_keys:
                 consensus.append("U")
-                update_correctness("U", k, count)
+                update_correctness("U", k)
             else:
                 consensus.append("N")
-                update_correctness("N", k, count)
+                update_correctness("N", k)
 
 
 
@@ -280,19 +255,12 @@ def generate_consensus (output, k):
 
         count += 1
 
-#    for key in dict_infos:
-#        if dict_infos.get(key).K > 1:
-#            print(dict_infos.get(key).sequence_reconstructed)
-#            #time.sleep(1)
-#            dict_infos.get(key).write_to_file()
 
 
     file = open(output, "w")
 
     consensus = consensus[:len(dict_content.get(0))]
 
-    #print(consensus)
-    #print("consensus length", len(consensus))
     file.write(">CoopPipe_consensus\n" + ''.join(consensus)  + "\n")
 
     file.close()
@@ -350,7 +318,7 @@ if __name__ == '__main__':
     print("nr ds - ", len(datasets))
 
 
-    k_vals = [5, 15, 30] #, 200, 400, 500]
+    k_vals = [3, 5, 10, 15] #, 200, 400, 500]
 
     id_number = [1]
 

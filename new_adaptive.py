@@ -6,11 +6,10 @@ import sys
 import warnings
 
 dict_content = {}
-list_correctness = []
-list_last_values = []
+list_correctness=[]
+list_last_values=[]
 
-
-def add_to_dict(key, val, dict):  # adds element to a dictionary with a certain val; creates element if it doesn't exist
+def add_to_dict(key, val, dict): #adds element to a dictionary with a certain val; creates element if it doesn't exist
 
 	if key in dict:
 		# append the new number to the existing array at this slot
@@ -21,7 +20,6 @@ def add_to_dict(key, val, dict):  # adds element to a dictionary with a certain 
 		if dict == dict_content:
 			list_correctness.append([])
 			list_last_values.append([])
-
 
 def read_file(path):  # read file and add it to a dictionary
 	dict_names_internal = {}
@@ -53,52 +51,46 @@ def read_file(path):  # read file and add it to a dictionary
 	return dict_names_internal
 
 
-def update_correctness(chosen, k):  # updates the list of correct values
+def update_correctness(chosen, k): #updates the list of correct values
 	count = 0
 
 	for i in list_correctness:
 		if len(list_correctness[count]) == k:
 			list_correctness[count].pop(0)
 
-		if list_last_values[count][len(list_last_values[count]) - 1] == chosen:
+		if list_last_values[count][len(list_last_values[count]) -1] == chosen:
 			list_correctness[count].append(1)
 		else:
 			list_correctness[count].append(0)
 
 		count += 1
 
-
-def get_value_correctness(key, info):
-
+def get_value_correctness(key): #TODO
 	correctness_expected = sum(list_correctness[key])
 
 	if model == None:
 		return correctness_expected
 	else:
-		#info = [virus, key, k]
-		key = info[1]
-		#print(key)
-		k = info[2]
+		k = len(list_last_values[key])
+		if k <= 0:
+			k = 1
 		nr_a = list_last_values[key].count("A") / k
 		nr_t = list_last_values[key].count("T") / k
 		nr_c = list_last_values[key].count("C") / k
 		nr_g = list_last_values[key].count("G") / k
 		nr_n = list_last_values[key].count("N") / k
 
-		virus_key = info[0]
+		virus_key = args.v
 		virus_dict = {'B19V': 1, 'HPV68': 2, 'VZV': 3, 'MCPyV': 4}
 		virus = virus_dict[virus_key]
 
-
 		name_tool_key = dict_names_internal[count]
-		#print(name_tool_key)
+		# print(name_tool_key)
 		name_tool_dict = {"coronaspades": 1, "haploflow": 2, "lazypipe": 3, "metaspades": 4,
-		 "metaviralspades": 5, "pehaplo": 6, "qure": 7, "qvg": 8, "spades": 9,
-		 "ssake": 10, "tracespipe": 11, "tracespipelite": 12, "v-pipe": 13,
-		 "virgena": 14, "vispa": 15}
+		                  "metaviralspades": 5, "pehaplo": 6, "qure": 7, "qvg": 8, "spades": 9,
+		                  "ssake": 10, "tracespipe": 11, "tracespipelite": 12, "v-pipe": 13,
+		                  "virgena": 14, "vispa": 15}
 		name_tool = name_tool_dict[name_tool_key]
-
-		#print(name_tool)
 
 		if list_last_values[key] != []:
 			aux_seq = str(list_last_values[key][0]).replace('A', "1")
@@ -126,8 +118,8 @@ def get_value_correctness(key, info):
 		return model.predict(all_info)
 
 
+def generate_consensus (output, k):
 
-def generate_consensus(output, k):
 	count = 0
 	finished = 0
 
@@ -139,8 +131,6 @@ def generate_consensus(output, k):
 
 		dict_bases = {}
 		for key in dict_content:
-
-
 			try:
 				base = dict_content.get(key)[count]
 			except:
@@ -148,35 +138,34 @@ def generate_consensus(output, k):
 					keys_finished.append(key)
 					finished += 1
 
-			info = [virus, key, k]
 
-			if base in list_bases:  # check if it is one of the bases
+			if base in list_bases: #check if it is one of the bases
 				if base == "a" or base == "A":
-					add_to_dict("A", get_value_correctness(key, info), dict_bases)
+					add_to_dict("A", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("A")
 
 				elif base == "c" or base == "C":
-					add_to_dict("C", get_value_correctness(key, info), dict_bases)
+					add_to_dict("C", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("C")
 
 				elif base == "t" or base == "T":
-					add_to_dict("T", get_value_correctness(key, info), dict_bases)
+					add_to_dict("T", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("T")
 
 				elif base == "g" or base == "G":
-					add_to_dict("G", get_value_correctness(key, info), dict_bases)
+					add_to_dict("G", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("G")
 
 				elif base == "u" or base == "U":
-					add_to_dict("U", get_value_correctness(key, info), dict_bases)
+					add_to_dict("U", get_value_correctness(key), dict_bases)
 					if len(list_last_values[key]) == k:
 						list_last_values[key].pop(0)
 					list_last_values[key].append("U")
@@ -186,12 +175,10 @@ def generate_consensus(output, k):
 						list_last_values[key].pop(0)
 					list_last_values[key].append("N")
 
-			else: #not a base, err
-
+			else: #error; not any of the bases
 				if len(list_last_values[key]) == k:
 					list_last_values[key].pop(0)
-					list_last_values[key].append("N")
-
+				list_last_values[key].append("N")
 
 		try:
 			max_val = max(dict_bases.values())
@@ -199,7 +186,7 @@ def generate_consensus(output, k):
 			max_val = 0
 		max_keys = [k for k, v in dict_bases.items() if v == max_val]
 
-		# print("MAX value", max_val , "Max keys " , max_keys)
+		#print("MAX value", max_val , "Max keys " , max_keys)
 
 		if len(max_keys) == 1:
 			consensus.append(max_keys[0])
@@ -228,14 +215,14 @@ def generate_consensus(output, k):
 				update_correctness("N", k)
 		count += 1
 
+
 	file = open(output, "w")
 
 	consensus[:len(dict_content.get(0))]
-	# print("consensus length", len(consensus))
-	file.write(">CoopPipe_consensus\n" + ''.join(consensus) + "\n")
+	#print("consensus length", len(consensus))
+	file.write(">CoopPipe_consensus\n" + ''.join(consensus)  + "\n")
 
 	file.close()
-
 
 def import_model(filename):
 	# if pickle file exists read from there as it is faster
@@ -248,25 +235,20 @@ def import_model(filename):
 			sys.exit()
 
 
-
-
-
 if __name__ == '__main__':
 
 	warnings.filterwarnings("ignore")
 
-	model = None
-
 	parser = argparse.ArgumentParser(description="Index",
-	                                 usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k> -m <ML model>")
+	usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k>")
 
 	parser.add_argument("-i", help="Aligned multi-FASTA", type=str, required=True)
 	parser.add_argument("-v", help="Name of the virus.", type=str)
-	parser.add_argument("-k", help="Values of k, separated by spaces.", nargs="+", type=int, required=True)
+	parser.add_argument("-k", help="Values of k, separated by spaces", nargs="+", type=int, required=True)
 	parser.add_argument("-m", help="Machine learning model to be used. If none selected, only weights will be used.",
-	                    type=str, required=False)
+						type=str, required=False)
 	args = parser.parse_args()
-
+	model = None
 	if args.m == "nn":
 		model = import_model("nn_model.sav")
 	elif args.m == "gbr":
@@ -283,4 +265,4 @@ if __name__ == '__main__':
 		count += 1
 
 	os.system("cat tmp-" + args.v + "-*.fa > new.fa")
-	# os.system('rm tmp-*.fa')
+	#os.system('rm tmp-*.fa')
