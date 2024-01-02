@@ -376,17 +376,18 @@ if __name__ == '__main__':
 	X, Y = drop_columns(data)
 	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-	#cross_validation_MLPRegressor(X_train, y_train, y_test)
-	print("Starting MLPRegressor")
-	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+
+
+	#print("Starting MLPRegressor")
+	#model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
 
 	print("Starting gradientboosting")
 	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
 
-	'''mlp_model = MLPRegressor(activation='relu', alpha=0.005, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
+	'''mlp_model = MLPRegressor(activation='relu', alpha=0.01, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
 
-	fit_and_predict(mlp_model, "mlp_model")
-
+	fit_and_predict(mlp_model, "mlp_model")'''
+	'''
 
 	gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.2, loss='squared_error', min_samples_split=2, n_estimators=50, random_state=42)
 
