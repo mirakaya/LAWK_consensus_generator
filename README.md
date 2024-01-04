@@ -1,1 +1,38 @@
-# AWK
+# Adaptive Weighted-K (AWK)
+
+Consensus-generating tool from aligned multi-FASTA formats.
+
+### REPLICATION ###
+
+To download AWK in a Linux system, please run:
+<pre>
+git clone https://github.com/mirakaya/AWK_consensus_generator.git
+chmod +x *.sh
+</pre>
+
+To generate a consensus the following command should be executed:
+<pre>
+python3 weighted_generate_consensus.py -i input.fa -v name_virus -k values_of_k -m ML_model
+</pre>
+
+To evaluate the consensus generated, please type:
+<pre>
+./Genome_metrics.sh --reconstructed reconstructed.fa --reference reference.fa --output results 
+</pre>
+
+### CITATION ###
+
+On using this software/method please cite:
+
+* pending
+
+### ISSUES ###
+
+For any issue let us know at [issues link](https://github.com/mirakaya/AWK_consensus_generator/issues).
+
+### LICENSE ###
+
+GPL v3.
+
+For more information:
+re>http://www.gnu.org/licenses/gpl-3.0.html</pre>
