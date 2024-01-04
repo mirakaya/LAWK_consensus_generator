@@ -35,4 +35,4 @@ For any issue let us know at [issues link](https://github.com/mirakaya/AWK_conse
 GPL v3.
 
 For more information:
-re>http://www.gnu.org/licenses/gpl-3.0.html</pre>
+<pre>http://www.gnu.org/licenses/gpl-3.0.html</pre>
