@@ -1,18 +1,18 @@
-# Adaptive Weighted-K (AWK)
+# Learning and Adaptive Weighted-K (LAWK)
 
-Consensus-generating tool from aligned multi-FASTA formats.
+Consensus-generating tool from aligned multi-FASTA files.
 
 ### REPLICATION ###
 
-To download AWK in a Linux system, please run:
+To download LAWK in a Linux system, please run:
 <pre>
-git clone https://github.com/mirakaya/AWK_consensus_generator.git
+git clone https://github.com/mirakaya/LAWK_consensus_generator.git
 chmod +x *.sh
 </pre>
 
 To generate a consensus the following command should be executed:
 <pre>
-python3 weighted_generate_consensus.py -i input.fa -v name_virus -k values_of_k -m ML_model
+python3 new_adaptive.py -i input.fa -v name_virus -k values_of_k -m ML_model -d model_directory
 </pre>
 
 To evaluate the consensus generated, please type:
@@ -28,7 +28,7 @@ On using this software/method please cite:
 
 ### ISSUES ###
 
-For any issue let us know at [issues link](https://github.com/mirakaya/AWK_consensus_generator/issues).
+For any issue let us know at [issues link](https://github.com/mirakaya/LAWK_consensus_generator/issues).
 
 ### LICENSE ###
 
