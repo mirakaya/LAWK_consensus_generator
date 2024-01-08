@@ -82,7 +82,10 @@ def get_value_correctness(key): #TODO
 
 		virus_key = args.v
 		virus_dict = {'B19V': 1, 'HPV68': 2, 'VZV': 3, 'MCPyV': 4}
-		virus = virus_dict[virus_key]
+		try:
+			virus = virus_dict[virus_key]
+		except:
+			virus = 0
 
 		name_tool_key = dict_names_internal[count]
 		# print(name_tool_key)
@@ -240,19 +243,24 @@ if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 
 	parser = argparse.ArgumentParser(description="Index",
-	usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k>")
+	usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k> -d <ml_models_directory> -m <ml_model>")
 
 	parser.add_argument("-i", help="Aligned multi-FASTA", type=str, required=True)
 	parser.add_argument("-v", help="Name of the virus.", type=str)
 	parser.add_argument("-k", help="Values of k, separated by spaces", nargs="+", type=int, required=True)
 	parser.add_argument("-m", help="Machine learning model to be used. If none selected, only weights will be used.",
 						type=str, required=False)
+	parser.add_argument("-d", help="Directory where the ML models are located.", type=str)
 	args = parser.parse_args()
 	model = None
-	if args.m == "nn":
-		model = import_model("nn_model.sav")
+	if args.m == "mlp":
+		print("Using the MLPRegressor model.")
+		model = import_model(args.d + "/mlp_model.sav")
 	elif args.m == "gbr":
-		model = import_model("gbr_model.sav")
+		print("Using the GradientBoostingRegressor model.")
+		model = import_model(args.d + "/gbr_model.sav")
+	else:
+		print("Using the weighted model.")
 
 	virus = args.v
 
@@ -265,4 +273,4 @@ if __name__ == '__main__':
 		count += 1
 
 	os.system("cat tmp-" + args.v + "-*.fa > new.fa")
-	#os.system('rm tmp-*.fa')
+	os.system('rm tmp-*.fa')

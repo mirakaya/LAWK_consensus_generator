@@ -123,8 +123,8 @@ if [ -f "$RECONSTRUCTED_FILE" ] && [ -f "$REFERENCE_FILE" ]; then
       NRC=$(echo $COMPRESSED_SIZE_W_REF \/ $AUX_MULT|bc -l | xargs printf %.3f)      
     fi
       
-    printf "Identity\tNCSD\tNRC\n" > $OUTPUT.tsv
-    printf "$IDEN\t$NCSD\t$NRC\n" >> $OUTPUT.tsv
+    #printf "Identity\tNCSD\tNRC\n" > $OUTPUT.tsv
+    printf "$RECONSTRUCTED_FILE\t$REFERENCE_FILE\t$IDEN\t$NCSD\t$NRC\n" >> $OUTPUT.tsv
       
 else
   printf "At least one of the input files does not exist.\n";
