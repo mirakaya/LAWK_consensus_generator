@@ -126,10 +126,10 @@ def correlation(data):
 	# Delete less relevant features based on the correlation with the output variable
 	cor = data.corr()  # calculate correlations
 
-	print(cor)
+	sns.set(font_scale=1.3)
 
 	# Correlation graph
-	plt.figure(figsize=(19, 19))
+	plt.figure(figsize=(22, 22))
 	sns.heatmap(cor, annot=True, cmap=sns.diverging_palette(20, 220, n=200), vmin=-1, vmax=1)
 	plt.savefig('correlation.pdf')
 	plt.savefig('correlation.jpg')
@@ -229,7 +229,8 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
-		'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
+		#'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
+		'hidden_layer_sizes': [(20, 20), (20, 20, 20), (20, 20, 20, 20)],
 		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20, 5), (20, 20), (20, 30)],
 		'activation': ['relu'],
 		'solver': ['adam', 'sgd'],
@@ -252,7 +253,7 @@ def cross_validation_GradientBoostingRegression(X_train, y_train, y_test):
 	param_grid = {
 		'loss': ["squared_error", "absolute_error"],
 		'learning_rate': [0.1, 0.2, 0.3],
-		'criterion': ["friedman_mse", "squared_error"],
+		'criterion': ["friedman_mse"],
 		'n_estimators': [15, 30, 50],
 		'min_samples_split': [2, 4]
 	}
@@ -376,22 +377,32 @@ if __name__ == '__main__':
 	X, Y = drop_columns(data)
 	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-
-
-	#print("Starting MLPRegressor")
-	#model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
-
-	print("Starting gradientboosting")
+	'''print("Starting gradientboosting")
 	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
+'''
+	'''print("Starting MLPRegressor")
+	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+'''
 
-	'''mlp_model = MLPRegressor(activation='relu', alpha=0.01, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
 
-	fit_and_predict(mlp_model, "mlp_model")'''
-	'''
+	mlp_model = MLPRegressor(activation='relu', alpha=0.01, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
 
-	gbr_model = GradientBoostingRegressor(criterion='friedman_mse', learning_rate=0.2, loss='squared_error', min_samples_split=2, n_estimators=50, random_state=42)
+	fit_and_predict(mlp_model, "mlp_model")
 
-	fit_and_predict(gbr_model, "gbr_model")'''
+	'''Mean squared error: 0.02
+R-squared: 0.72
+Mean absolute error: 0.05
+Mean absolute percentage error: 36661456515607.19'''
+
+
+	gbr_model = GradientBoostingRegressor(learning_rate=0.3,n_estimators=50, random_state=42)
+
+	fit_and_predict(gbr_model, "gbr_model")
+	
+	'''Mean squared error: 0.01
+R-squared: 0.84
+Mean absolute error: 0.03
+Mean absolute percentage error: 25563785680183.20'''
 
 
 

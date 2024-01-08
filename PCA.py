@@ -7,7 +7,7 @@ import plotly.express as px
 from sklearn.manifold import TSNE
 import seaborn as sns
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
@@ -240,24 +240,34 @@ def get_boxplot(df):
 
 	axs[3].boxplot(df['Seq_reconstructed'])
 	axs[3].set_xlabel('Seq_reconstructed')
+
 	axs[4].boxplot(df['Nr_A_expected'])
 	axs[4].set_xlabel('Nr_A_expected')
+
 	axs[5].boxplot(df['Nr_T_expected'])
 	axs[5].set_xlabel('Nr_T_expected')
+
 	axs[6].boxplot(df['Nr_G_expected'])
 	axs[6].set_xlabel('Nr_G_expected')
+
 	axs[7].boxplot(df['Nr_C_expected'])
 	axs[7].set_xlabel('Nr_C_expected')
+
 	axs[8].boxplot(df['Nr_N_expected'])
 	axs[8].set_xlabel('Nr_N_expected')
+
 	axs[9].boxplot(df['Correctness_expected'])
 	axs[9].set_xlabel('Correctness_expected')
+
 	axs[10].boxplot(df['Performance_list'])
 	axs[10].set_xlabel('Performance_list')
+
 	axs[11].boxplot(df['CG_content'])
 	axs[11].set_xlabel('CG_content')
+
 	axs[12].boxplot(df['AT_content'])
 	axs[12].set_xlabel('AT_content')
+
 	axs[13].boxplot(df['Actual_correctness'])
 	axs[13].set_xlabel('Actual_correctness')
 
@@ -286,25 +296,49 @@ if __name__ == '__main__':
 	else:
 		data = import_files(base_dataset_name + '.tsv', base_dataset_name + '.pickle')
 
-
+	data = data.sample(250000, replace=False, random_state=42)
 
 	print(data.shape)
 	data = transform_categorical_to_code(data)
-
-	# correlation(data)
+	print(data.describe())
+	#correlation(data)
 	#get_boxplot(data)
 
-	data = data.sample(500000, replace=False, random_state=42)
 
-	print(data.shape)
+
+
+	features = data.columns.values.tolist()
+	print(features)
+
+
+
+
+	'''print("Before scaling")
+	print(data.describe())
+	std_scaler = MinMaxScaler()
+	scaled_data = std_scaler.fit_transform(data)
+	data = pd.DataFrame(scaled_data, columns=features)
+
+	print("\n\n\nlBefore scaling")
+	print(data.describe())
+
+	print(data.shape)'''
+
+
+
+
+	#print(data.shape)
 
 	#scaler = MinMaxScaler(feature_range=(0, 1))
 	#data[data.columns] = scaler.fit_transform(data[data.columns])
 
+	#scaler = StandardScaler()
+	#data[data.columns] = scaler.fit_transform(data[data.columns])
+
 	X, y = drop_columns(data)
 
-	PCA_analysis_2D(X, y)
-	PCA_analysis_3D(X, y)
+	#PCA_analysis_2D(X, y)
+	#PCA_analysis_3D(X, y)
 	t_sne_analysis_2D(X, y)
 	t_sne_analysis_3D(X, y)
 
