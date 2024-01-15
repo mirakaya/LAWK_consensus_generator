@@ -115,7 +115,7 @@ def get_value_correctness(key): #TODO
 		cg = nr_c + nr_g
 		at = nr_a + nr_t
 
-		all_info = [[virus, name_tool, k, final_seq, nr_a, nr_t, nr_c, nr_g, nr_n, correctness_expected, performance_list, cg, at]]
+		all_info = [[virus, final_seq, nr_a, nr_t, nr_c, nr_g, nr_n, correctness_expected, cg, at]]
 		#print("\n\n\n", all_info, "\n\n\n")
 
 		return model.predict(all_info)
@@ -250,15 +250,22 @@ if __name__ == '__main__':
 	parser.add_argument("-k", help="Values of k, separated by spaces", nargs="+", type=int, required=True)
 	parser.add_argument("-m", help="Machine learning model to be used. If none selected, only weights will be used.",
 						type=str, required=False)
-	parser.add_argument("-d", help="Directory where the ML models are located.", type=str)
+	parser.add_argument("-d", help="Directory where the ML models are located.", type=str, required=True)
 	args = parser.parse_args()
 	model = None
 	if args.m == "mlp":
 		print("Using the MLPRegressor model.")
-		model = import_model(args.d + "/mlp_model.sav")
+
+		if args.d != None:
+			model = import_model(args.d + "/mlp_model.sav")
+		else:
+			model = import_model("mlp_model.sav")
 	elif args.m == "gbr":
 		print("Using the GradientBoostingRegressor model.")
-		model = import_model(args.d + "/gbr_model.sav")
+		if args.d != None:
+			model = import_model(args.d + "/gbr_model.sav")
+		else:
+			model = import_model("gbr_model.sav")
 	else:
 		print("Using the weighted model.")
 

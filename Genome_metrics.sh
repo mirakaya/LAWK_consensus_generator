@@ -88,6 +88,8 @@ if [ -f "$RECONSTRUCTED_FILE" ] && [ -f "$REFERENCE_FILE" ]; then
       
   dnadiff $RECONSTRUCTED_FILE $REFERENCE_FILE; #run dnadiff
   IDEN=`cat out.report | grep "AvgIdentity " | head -n 1 | awk '{ print $2;}'`;  #retrieve results
+  rm out.report
+ 
  
   gto_fasta_rand_extra_chars < ${RECONSTRUCTED_FILE} > tmp.fa
   gto_fasta_to_seq < tmp.fa > $file_wout_extension.seq
@@ -98,6 +100,7 @@ if [ -f "$RECONSTRUCTED_FILE" ] && [ -f "$REFERENCE_FILE" ]; then
   GeCo3 -tm 1:1:0:1:0.9/0:0:0 -tm 7:10:0:1:0/0:0:0 -tm 16:100:1:10:0/3:10:0.9 -lr 0.03 -hs 64 ${REFERENCE_FILE}.seq  
   COMPRESSED_SIZE_WOUT_REF=$(ls -l ${REFERENCE_FILE}.seq.co | cut -d' ' -f5)
   rm ${REFERENCE_FILE}.seq.*
+  
   #Conditional compression C(X|Y) [use reference and target]
   GeCo3 -rm 20:500:1:12:0.9/3:100:0.9 -rm 13:200:1:1:0.9/0:0:0 -tm 1:1:0:1:0.9/0:0:0 -tm 7:10:0:1:0/0:0:0 -tm 16:100:1:10:0/3:10:0.9 -lr 0.03 -hs 64 -r $file_wout_extension.seq ${REFERENCE_FILE}.seq
   COMPRESSED_SIZE_COND_COMPRESSION=$(ls -l ${REFERENCE_FILE}.seq.co | cut -d' ' -f5)  
@@ -110,7 +113,7 @@ if [ -f "$RECONSTRUCTED_FILE" ] && [ -f "$REFERENCE_FILE" ]; then
   rm ${REFERENCE_FILE}.seq.*            
   FILE_SIZE=$(ls -l ${REFERENCE_FILE}.seq | cut -d' ' -f5)
      
-  printf "NCSD -> $COMPRESSED_SIZE_COND_COMPRESSION " # . $COMPRESSED_SIZE_WOUT_REF"
+  printf "NCSD -> $COMPRESSED_SIZE_COND_COMPRESSION div $COMPRESSED_SIZE_WOUT_REF\n\n" # . $COMPRESSED_SIZE_WOUT_REF"
   NCSD=$(echo $COMPRESSED_SIZE_COND_COMPRESSION \/ $COMPRESSED_SIZE_WOUT_REF |bc -l | xargs printf %.3f)
            
   AUX_MULT=$(echo "$FILE_SIZE * 2" | bc -l )
