@@ -243,7 +243,7 @@ if __name__ == '__main__':
 	warnings.filterwarnings("ignore")
 
 	parser = argparse.ArgumentParser(description="Index",
-	usage="python3 weighted_generate_consensus.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k> -d <ml_models_directory> -m <ml_model>")
+	usage="python3 LAWK.py -i <aligned multi-FASTA> -v <Name virus> -k <values of k> -d <ml_models_directory> -m <ml_model>")
 
 	parser.add_argument("-i", help="Aligned multi-FASTA", type=str, required=True)
 	parser.add_argument("-v", help="Name of the virus.", type=str)
@@ -259,13 +259,13 @@ if __name__ == '__main__':
 		if args.d != None:
 			model = import_model(args.d + "/mlp_model.sav")
 		else:
-			model = import_model("mlp_model.sav")
+			model = import_model("models/mlp_model.sav")
 	elif args.m == "gbr":
 		print("Using the GradientBoostingRegressor model.")
 		if args.d != None:
 			model = import_model(args.d + "/gbr_model.sav")
 		else:
-			model = import_model("gbr_model.sav")
+			model = import_model("models/gbr_model.sav")
 	else:
 		print("Using the weighted model.")
 

@@ -9,7 +9,7 @@ OUTPUT="results";
 SHOW_MENU () {
   echo " ------------------------------------------------------------------ ";
   echo "                                                                    ";
-  echo " Genome_metrics.sh : Evaluation script for AWK in terms of the      ";
+  echo " LAWK_evaluation.sh : Evaluation script for LAWK in terms of the    ";
   echo "                     genome metrics considered.                     ";
   echo "                                                                    ";
   echo " Program options -------------------------------------------------- ";
@@ -20,12 +20,12 @@ SHOW_MENU () {
   echo "                               genome;                              ";
   echo " --reference <STR>             File containing the reference genome.";
   echo "                                                                    ";
-  echo " --output <STR>                File contaaining the results.        ";
+  echo " --output <STR>                File containing the results.         ";
   echo "                                                                    ";
   echo " Examples --------------------------------------------------------- ";
   echo "                                                                    "; 
   echo " - Evaluate the reconstructed genome.                               ";
-  echo "  ./Genome_metrics.sh --reconstructed reconstructed.fa \\           ";
+  echo "  ./LAWK_evaluation.sh --reconstructed reconstructed.fa \\          ";
   echo "    --reference reference.fa --output results                       ";
   echo "                                                                    ";
   echo " ------------------------------------------------------------------ ";
