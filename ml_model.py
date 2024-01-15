@@ -1,31 +1,16 @@
 import pickle
 import time
-import warnings
-
-import numpy as np
-import random
 import os
-import sys
 import matplotlib.pyplot as  plt
 import pandas as pd
-from pandas import read_table, read_csv
 import seaborn as sns
-from sklearn import metrics
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier, GradientBoostingRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.metrics import mean_absolute_error, accuracy_score, mean_squared_error, r2_score, \
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, \
 	mean_absolute_percentage_error
-from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
-import random as rd
-import xgboost as xgb
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.svm import SVC, SVR
-from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBRegressor
-
-
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
 
 
 def import_files(filename, name_pickle): # import the csv file
@@ -99,7 +84,7 @@ def transform_categorical_to_code(data):
 	data['Seq_reconstructed'] = data['Seq_reconstructed'].replace(to_replace='[nN]', value='0', regex=True)
 
 
-	data.astype({'Performance_list': 'int64'})
+	#data.astype({'Performance_list': 'int64'})
 	data=data.apply(pd.to_numeric, errors='coerce')
 
 	'''data.Virus = pd.Categorical(data.Virus)
@@ -229,8 +214,8 @@ def cross_validation_MLPRegressor(X_train, y_train, y_test):
 
 def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 	param_grid = {
-		#'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
-		'hidden_layer_sizes': [(20, 20), (20, 20, 20), (20, 20, 20, 20)],
+		'hidden_layer_sizes': [(20,), (15, 30), (15, 15), (10,), (10,10), (20,10), (10,20), (20,20)],
+		#'hidden_layer_sizes': [(20, 20), (20, 20, 20), (20, 20, 20, 20)],
 		#'hidden_layer_sizes': [(20,), (19,), (18,), (21,), (22,), (20, 5), (20, 20), (20, 30)],
 		'activation': ['relu'],
 		'solver': ['adam', 'sgd'],
@@ -238,7 +223,7 @@ def cross_validation_MLPRegressor_v2(X_train, y_train, y_test):
 		'learning_rate': ['constant', 'adaptive']
 	}
 
-	model = MLPRegressor(random_state=42, early_stopping = True)
+	model = MLPRegressor(random_state=42)
 
 	cv = GridSearchCV(model, param_grid, n_jobs=6, verbose=10, cv=3)
 	cv.fit(X_train, y_train)
@@ -312,27 +297,33 @@ def generate_plots(data):
 	plt.show()
 
 
-def fit_and_predict(model, name):
+def   fit_and_predict(model, name, is_test):
 
-	print("Testing the " + name + "...")
+	if is_test == True:
+		print("Testing the " + name + "...")
 
-	model.fit(X_train, y_train)
+		model.fit(X_train, y_train)
 
-	y_pred = model.predict(X_test)
+		y_pred = model.predict(X_test)
 
-	# Evaluate the model's performance
-	mse = mean_squared_error(y_test, y_pred)
-	r2 = r2_score(y_test, y_pred)
-	mae = mean_absolute_error(y_test, y_pred)
-	mape = mean_absolute_percentage_error(y_test, y_pred)
-	print(f"Mean squared error: {mse:.2f}")
-	print(f"R-squared: {r2:.2f}")
-	print(f"Mean absolute error: {mae:.2f}")
-	print(f"Mean absolute percentage error: {mape:.2f}")
+		# Evaluate the model's performance
+		mse = mean_squared_error(y_test, y_pred)
+		r2 = r2_score(y_test, y_pred)
+		mae = mean_absolute_error(y_test, y_pred)
+		mape = mean_absolute_percentage_error(y_test, y_pred)
+		print(f"Mean squared error: {mse:.4f}")
+		print(f"Mean absolute error: {mae:.4f}")
+		print(f"R-squared: {r2:.4f}")
+		print(f"Mean absolute percentage error: {mape:.4f}")
 
-	# save model
-	filename = name + '.sav'
-	pickle.dump(model, open(filename, 'wb'))
+	else:
+		print("Saving the " + name + "...")
+
+		model.fit(X, Y)
+
+		# save model
+		filename = name + '.sav'
+		pickle.dump(model, open(filename, 'wb'))
 
 if __name__ == '__main__':
 
@@ -364,45 +355,37 @@ if __name__ == '__main__':
 	print("TIME ->", time.perf_counter() - init_time)
 	print(data.shape)
 
-
 	data = transform_categorical_to_code(data)
 	print(data.dtypes)
 	print(data.shape)
-	#
+
 	correlation(data)
 
-	# saving as tsv file
-	#data.to_csv('example.tsv', sep="\t")
+	# drop low correlation features
+	data = data.drop("Name_tool", axis=1)
+	data = data.drop("K", axis=1)
+	data = data.drop("Performance_list", axis=1)
+	correlation(data)
+
+	print(data.shape)
 
 	X, Y = drop_columns(data)
 	X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-	'''print("Starting gradientboosting")
-	cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
-'''
-	'''print("Starting MLPRegressor")
-	model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
-'''
+	#get parameters
+	#print("Starting MLPRegressor")
+	#model_mlp = cross_validation_MLPRegressor_v2(X_train, y_train, X_test)
+
+	#print("Starting gradientboosting")
+	#cross_validation_GradientBoostingRegression(X_train, y_train, X_test)
 
 
-	mlp_model = MLPRegressor(activation='relu', alpha=0.01, early_stopping=True, learning_rate='constant', hidden_layer_sizes=(20, 20), solver='adam', random_state = 42)
+	#train and save models
+	mlp_model = MLPRegressor(alpha=0.01, hidden_layer_sizes=(10, 10), random_state=42)
+	fit_and_predict(mlp_model, "mlp_model", True)
+	fit_and_predict(mlp_model, "mlp_model", False)
 
-	fit_and_predict(mlp_model, "mlp_model")
-
-	'''Mean squared error: 0.02
-R-squared: 0.72
-Mean absolute error: 0.05
-Mean absolute percentage error: 36661456515607.19'''
-
-
-	gbr_model = GradientBoostingRegressor(learning_rate=0.3,n_estimators=50, random_state=42)
-
-	fit_and_predict(gbr_model, "gbr_model")
+	gbr_model = GradientBoostingRegressor(learning_rate=0.3, min_samples_split=4, n_estimators=50, random_state=42)
+	fit_and_predict(gbr_model, "gbr_model", True)
+	fit_and_predict(gbr_model, "gbr_model", False)
 	
-	'''Mean squared error: 0.01
-R-squared: 0.84
-Mean absolute error: 0.03
-Mean absolute percentage error: 25563785680183.20'''
-
-
-
